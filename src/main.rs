@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 use lex::TokenType;
 use std::{error::Error, path::PathBuf};
 
@@ -93,4 +94,36 @@ fn parse_args() -> Result<Args, CliError> {
 
 fn main() {
     println!("Hello, world!");
+||||||| Stash base
+fn main() {
+    println!("Hello, world!");
+=======
+#![feature(variant_count)]
+
+type LitId = u16;
+
+mod ttype;
+
+use crate::ttype::TokenInfo;
+use crate::ttype::TokenType;
+
+struct Token {
+    id: [u8; 3],    // u24
+    tag: TokenType, // tag + error
+}
+
+fn main() {
+    let i = TokenInfo::new(TokenType::Semicolon, false);
+    println!("{}", ttype::ERROR);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Token;
+
+    #[test]
+    fn token_size() {
+        assert_eq!(4, size_of::<Token>());
+    }
+>>>>>>> Stashed changes
 }
