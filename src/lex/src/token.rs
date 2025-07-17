@@ -1,4 +1,4 @@
-use crate::range::Range;
+use std::fmt::Display;
 
 /// Creates a new handle with the given name
 #[macro_export]
@@ -39,6 +39,12 @@ pub struct TokenSource {
     pub line: usize,
 }
 
+impl<'src> TokenSource {
+    pub fn fmt(&self, source: &'src str) -> &'src str {
+        &source[self.start..self.end]
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TokenType {
     Ident,
@@ -49,4 +55,19 @@ pub enum TokenType {
     OpenBrace,
     CloseBrace,
     Semicolon,
+}
+
+impl Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TokenType::Ident => write!(f, "Ident"),
+            TokenType::Keyword => todo!(),
+            TokenType::Constant => write!(f, "Constant"),
+            TokenType::OpenParen => write!(f, "OpenParen"),
+            TokenType::CloseParen => write!(f, "CloseParen"),
+            TokenType::OpenBrace => write!(f, "OpenBrace"),
+            TokenType::CloseBrace => write!(f, "CloseBrace"),
+            TokenType::Semicolon => write!(f, "Semicolon"),
+        }
+    }
 }

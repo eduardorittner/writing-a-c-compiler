@@ -3,6 +3,7 @@ source: src/lib.rs
 expression: "Lexer :: lex(\"\")"
 ---
 TokenizedOutput {
+    source: "",
     tokens: [],
     token_sources: [],
     lines: [

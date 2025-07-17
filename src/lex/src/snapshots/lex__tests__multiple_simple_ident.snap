@@ -3,6 +3,7 @@ source: src/lib.rs
 expression: "Lexer :: lex(\"ident main func int hi\")"
 ---
 TokenizedOutput {
+    source: "ident main func int hi",
     tokens: [
         Token {
             ttype: Ident,

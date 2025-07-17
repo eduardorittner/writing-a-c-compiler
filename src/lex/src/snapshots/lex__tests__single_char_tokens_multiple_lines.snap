@@ -3,6 +3,7 @@ source: src/lib.rs
 expression: "Lexer :: lex(\"(\\n)\\n{\\n}\\n;\\n\\n\\n\")"
 ---
 TokenizedOutput {
+    source: "(\n)\n{\n}\n;\n\n\n",
     tokens: [
         Token {
             ttype: OpenParen,

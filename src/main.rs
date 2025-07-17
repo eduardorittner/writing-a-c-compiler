@@ -1,5 +1,4 @@
-<<<<<<< Updated upstream
-use lex::TokenType;
+use lex::{Lexer, TokenType};
 use std::{error::Error, path::PathBuf};
 
 /// Cli arguments
@@ -8,6 +7,21 @@ use std::{error::Error, path::PathBuf};
 struct Args {
     file: PathBuf,
     mode: CompilationMode,
+}
+
+/// A validated wrapper over args where the file is known to be valid and has already been read
+struct File {
+    args: Args,
+    contents: String,
+}
+
+impl TryFrom<Args> for File {
+    type Error = std::io::Error;
+
+    fn try_from(args: Args) -> Result<Self, Self::Error> {
+        let contents = std::fs::read_to_string(&args.file)?;
+        Ok(File { args, contents })
+    }
 }
 
 /// Compilation mode
@@ -92,38 +106,32 @@ fn parse_args() -> Result<Args, CliError> {
     Ok(Args { file, mode })
 }
 
-fn main() {
-    println!("Hello, world!");
-||||||| Stash base
-fn main() {
-    println!("Hello, world!");
-=======
-#![feature(variant_count)]
+fn usage_help() {
+    todo!()
+}
 
-type LitId = u16;
+fn lex(file: File) {
+    let output = Lexer::lex(&file.contents);
 
-mod ttype;
-
-use crate::ttype::TokenInfo;
-use crate::ttype::TokenType;
-
-struct Token {
-    id: [u8; 3],    // u24
-    tag: TokenType, // tag + error
+    // TODO implement display for tokenized output?
+    println!("{output}");
 }
 
 fn main() {
-    let i = TokenInfo::new(TokenType::Semicolon, false);
-    println!("{}", ttype::ERROR);
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::Token;
-
-    #[test]
-    fn token_size() {
-        assert_eq!(4, size_of::<Token>());
-    }
->>>>>>> Stashed changes
+    if let Ok(args) = parse_args() {
+        match File::try_from(args) {
+            Ok(file) => match file.args.mode {
+                CompilationMode::Lex => lex(file),
+                CompilationMode::Parse => todo!(),
+                CompilationMode::Codegen => todo!(),
+                CompilationMode::NakedAssembly => todo!(),
+                CompilationMode::Full => todo!(),
+            },
+            Err(e) => {
+                eprintln!("Error reading file {:?}", e);
+            }
+        }
+    } else {
+        usage_help()
+    };
 }

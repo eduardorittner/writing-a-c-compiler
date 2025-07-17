@@ -3,6 +3,7 @@ source: src/lib.rs
 expression: "Lexer ::\nlex(\"__underscores __more_under_scores_ some1number234 _under1_score_2_with3_numbers5\")"
 ---
 TokenizedOutput {
+    source: "__underscores __more_under_scores_ some1number234 _under1_score_2_with3_numbers5",
     tokens: [
         Token {
             ttype: Ident,

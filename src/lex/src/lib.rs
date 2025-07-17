@@ -1,10 +1,10 @@
 pub mod error;
 pub mod line;
-pub mod range;
 pub mod token;
 
 pub use error::LexError;
 pub use token::{Token, TokenType};
+use tracing::{Level, span};
 
 use crate::{
     line::{Line, LineHandle},
@@ -17,7 +17,7 @@ pub struct Lexer<'src> {
     source: &'src str,
     rest: &'src str,
     offset: usize,
-    output: TokenizedOutput,
+    output: TokenizedOutput<'src>,
 }
 
 impl<'src> Lexer<'src> {
@@ -26,7 +26,7 @@ impl<'src> Lexer<'src> {
             source,
             rest: source,
             offset: 0,
-            output: TokenizedOutput::new(),
+            output: TokenizedOutput::new(source),
         }
     }
 
@@ -71,17 +71,41 @@ impl<'src> Lexer<'src> {
         let mut chars = self.rest.chars();
 
         let c = chars.next().expect("This function should only be called when we still have at least one (alphabetical) char in the input");
-
         let start = self.offset;
 
         loop {
             match chars.next() {
                 Some(c) if matches!(c, 'A'..='Z' | 'a'..='z' | '1'..='9' | '_') => (),
                 Some(c) if c.is_whitespace() => break,
-                None => break,
-                c => panic!("Not yet implemented: {c:?}"), // TODO: emit an error with a token (how do we recover?)
+                _ => break,
             };
+            self.offset += c.len_utf8();
+        }
 
+        self.offset += c.len_utf8();
+        self.rest = &self.source[self.offset..];
+
+        let token_source = TokenSource {
+            start,
+            end: self.offset,
+            line: self.output.current_line(),
+        };
+
+        self.output
+            .push_token(TokenType::Ident, false, token_source);
+    }
+
+    fn consume_numeric_constant(&mut self) {
+        let mut chars = self.rest.chars();
+
+        let c = chars.next().expect("This function should only be called when we still have at least one (alpha_numerical) char in the input");
+        let start = self.offset;
+
+        loop {
+            match chars.next() {
+                Some(c) if matches!(c, '1'..='9' | '_') => (), // We allow '_' inside numbers
+                _ => break,
+            };
             self.offset += c.len_utf8();
         }
 
@@ -96,11 +120,13 @@ impl<'src> Lexer<'src> {
         };
 
         self.output
-            .push_token(TokenType::Ident, false, token_source);
+            .push_token(TokenType::Constant, false, token_source);
     }
 
     pub fn lex(source: &str) -> TokenizedOutput {
         let mut lexer = Self::new(source);
+
+        let _ = span!(Level::TRACE, "Lexing").entered();
 
         lexer.run_lexer();
         lexer.output
@@ -131,7 +157,9 @@ impl<'src> Lexer<'src> {
                 '}' => emit_single_char_token(TokenType::CloseBrace),
                 ';' => emit_single_char_token(TokenType::Semicolon),
                 c if matches!(c, 'a'..='z' | 'A'..='Z' | '_') => self.consume_ident(),
-                _ => todo!(),
+                c if c.is_ascii_alphanumeric() => self.consume_numeric_constant(),
+                '\0' => break,
+                _ => panic!("{c:?}"),
             };
         }
         // Emit last line since it doesn't (necessarily) have a '\n'
@@ -143,19 +171,23 @@ impl<'src> Lexer<'src> {
 }
 
 mod output {
+    use std::fmt::{self, Display};
+
     use crate::{Token, TokenType, line::Line, token::TokenSource};
 
     #[derive(Debug)]
-    pub struct TokenizedOutput {
+    pub struct TokenizedOutput<'src> {
+        source: &'src str,
         tokens: Vec<Token>,
         token_sources: Vec<TokenSource>,
         // We don't need a Vec<LineHandle> since they're a simple range [0..lines.len()]
         lines: Vec<Line>,
     }
 
-    impl TokenizedOutput {
-        pub(crate) fn new() -> Self {
+    impl<'src> TokenizedOutput<'src> {
+        pub(crate) fn new(source: &'src str) -> Self {
             TokenizedOutput {
+                source,
                 tokens: Vec::new(),
                 token_sources: Vec::new(),
                 lines: Vec::new(),
@@ -202,6 +234,21 @@ mod output {
 
         pub(crate) fn is_empty(&self) -> bool {
             self.tokens.is_empty() && self.lines.is_empty()
+        }
+    }
+
+    impl<'src> Display for TokenizedOutput<'src> {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            for (token, source) in self.tokens.iter().zip(self.token_sources.iter()) {
+                write!(
+                    f,
+                    "{}: [{}] \"{}\"\n",
+                    source.line,
+                    token.ttype,
+                    source.fmt(self.source)
+                )?;
+            }
+            Ok(())
         }
     }
 }
