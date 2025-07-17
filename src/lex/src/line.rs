@@ -1,10 +1,10 @@
-use crate::Handle;
 use crate::handle;
 
-handle!(Line, LineHandle);
+handle!(LineHandle);
 
 /// Line information
-struct Line {
-    offset: u32,
-    length: u32,
+#[derive(Debug, Clone, Copy)]
+pub struct Line {
+    pub start: usize,
+    pub end: usize,
 }

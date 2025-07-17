@@ -1,0 +1,14 @@
+---
+source: src/lib.rs
+expression: "Lexer :: lex(\"\")"
+---
+TokenizedOutput {
+    tokens: [],
+    token_sources: [],
+    lines: [
+        Line {
+            start: 0,
+            end: 0,
+        },
+    ],
+}

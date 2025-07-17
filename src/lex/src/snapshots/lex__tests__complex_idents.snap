@@ -1,0 +1,56 @@
+---
+source: src/lib.rs
+expression: "Lexer ::\nlex(\"__underscores __more_under_scores_ some1number234 _under1_score_2_with3_numbers5\")"
+---
+TokenizedOutput {
+    tokens: [
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 0,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 1,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 2,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 3,
+        },
+    ],
+    token_sources: [
+        TokenSource {
+            start: 0,
+            end: 13,
+            line: 0,
+        },
+        TokenSource {
+            start: 14,
+            end: 34,
+            line: 0,
+        },
+        TokenSource {
+            start: 35,
+            end: 49,
+            line: 0,
+        },
+        TokenSource {
+            start: 50,
+            end: 80,
+            line: 0,
+        },
+    ],
+    lines: [
+        Line {
+            start: 0,
+            end: 80,
+        },
+    ],
+}

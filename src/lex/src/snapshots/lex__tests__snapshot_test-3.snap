@@ -1,0 +1,82 @@
+---
+source: src/lib.rs
+expression: "Lexer::lex(source)"
+---
+TokenizedOutput {
+    tokens: [
+        Token {
+            ttype: OpenParen,
+            has_error: false,
+            handle: 0,
+        },
+        Token {
+            ttype: CloseParen,
+            has_error: false,
+            handle: 1,
+        },
+        Token {
+            ttype: OpenBrace,
+            has_error: false,
+            handle: 2,
+        },
+        Token {
+            ttype: CloseBrace,
+            has_error: false,
+            handle: 3,
+        },
+        Token {
+            ttype: Semicolon,
+            has_error: false,
+            handle: 4,
+        },
+    ],
+    token_sources: [
+        TokenSource {
+            start: 0,
+            end: 1,
+            line: 0,
+        },
+        TokenSource {
+            start: 2,
+            end: 3,
+            line: 1,
+        },
+        TokenSource {
+            start: 4,
+            end: 5,
+            line: 2,
+        },
+        TokenSource {
+            start: 6,
+            end: 7,
+            line: 3,
+        },
+        TokenSource {
+            start: 8,
+            end: 9,
+            line: 4,
+        },
+    ],
+    lines: [
+        Line {
+            start: 0,
+            end: 2,
+        },
+        Line {
+            start: 2,
+            end: 4,
+        },
+        Line {
+            start: 4,
+            end: 6,
+        },
+        Line {
+            start: 6,
+            end: 8,
+        },
+        Line {
+            start: 8,
+            end: 9,
+        },
+    ],
+}

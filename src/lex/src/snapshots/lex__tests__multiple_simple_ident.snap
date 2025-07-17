@@ -1,0 +1,66 @@
+---
+source: src/lib.rs
+expression: "Lexer :: lex(\"ident main func int hi\")"
+---
+TokenizedOutput {
+    tokens: [
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 0,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 1,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 2,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 3,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 4,
+        },
+    ],
+    token_sources: [
+        TokenSource {
+            start: 0,
+            end: 5,
+            line: 0,
+        },
+        TokenSource {
+            start: 6,
+            end: 10,
+            line: 0,
+        },
+        TokenSource {
+            start: 11,
+            end: 15,
+            line: 0,
+        },
+        TokenSource {
+            start: 16,
+            end: 19,
+            line: 0,
+        },
+        TokenSource {
+            start: 20,
+            end: 22,
+            line: 0,
+        },
+    ],
+    lines: [
+        Line {
+            start: 0,
+            end: 22,
+        },
+    ],
+}
