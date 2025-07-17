@@ -1,15 +1,10 @@
-pub mod error;
 pub mod line;
 pub mod token;
 
-pub use error::LexError;
 pub use token::{Token, TokenType};
 use tracing::{Level, span};
 
-use crate::{
-    line::{Line, LineHandle},
-    token::TokenSource,
-};
+use crate::{line::Line, token::TokenSource};
 
 use output::TokenizedOutput;
 
@@ -20,8 +15,8 @@ pub struct Lexer<'src> {
     output: TokenizedOutput<'src>,
 }
 
-impl<'src> Lexer<'src> {
-    pub fn new(source: &str) -> Lexer {
+impl Lexer<'_> {
+    pub fn new(source: &str) -> Lexer<'_> {
         Lexer {
             source,
             rest: source,
@@ -123,7 +118,7 @@ impl<'src> Lexer<'src> {
             .push_token(TokenType::Constant, false, token_source);
     }
 
-    pub fn lex(source: &str) -> TokenizedOutput {
+    pub fn lex(source: &str) -> TokenizedOutput<'_> {
         let mut lexer = Self::new(source);
 
         let _ = span!(Level::TRACE, "Lexing").entered();
@@ -240,10 +235,6 @@ mod output {
                 0
             }
         }
-
-        pub(crate) fn is_empty(&self) -> bool {
-            self.tokens.is_empty() && self.lines.is_empty()
-        }
     }
 
     impl<'src> Display for TokenizedOutput<'src> {
@@ -264,7 +255,7 @@ mod output {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Lexer, Token, TokenType};
+    use crate::Lexer;
 
     macro_rules! snapshot_test (
         ($string:expr) => {

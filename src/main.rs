@@ -1,4 +1,4 @@
-use lex::{Lexer, TokenType};
+use lex::Lexer;
 use std::{error::Error, path::PathBuf};
 
 /// Cli arguments
@@ -36,7 +36,7 @@ impl TryFrom<Args> for File {
 
 /// Compilation mode
 /// Default is Full, which generates the executable
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 enum CompilationMode {
     /// Stop after lexing
     Lex,
@@ -47,13 +47,8 @@ enum CompilationMode {
     /// Stop after codegen but emits the assembly file
     NakedAssembly,
     /// Emits the final executable
+    #[default]
     Full,
-}
-
-impl Default for CompilationMode {
-    fn default() -> Self {
-        CompilationMode::Full
-    }
 }
 
 // TODO add variants
@@ -64,7 +59,7 @@ impl Default for CompilationMode {
 struct CliError;
 
 impl std::fmt::Display for CliError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
     }
 }
@@ -77,7 +72,7 @@ fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
     // First argument is the executable name
     args.remove(0);
 
-    if args.len() == 0 {
+    if args.is_empty() {
         // TODO No file argument
         return Err(CliError);
     }
@@ -129,7 +124,7 @@ fn main() {
                 CompilationMode::Full => todo!(),
             },
             Err(e) => {
-                eprintln!("Error reading file {:?}", e);
+                eprintln!("Error reading file {e:?}");
             }
         }
     } else {
