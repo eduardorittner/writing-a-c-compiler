@@ -55,6 +55,15 @@ pub enum TokenType {
     OpenBrace,
     CloseBrace,
     Semicolon,
+    Colon,       // ':'
+    FrontSlash,  // '/'
+    BackSlash,   // '\'
+    Underscore,  // '_'
+    Hyphen,      // '-'
+    Asterisk,    // '*'
+    Quote,       // "'"
+    DoubleQuote, // '"'
+    Comma,       // ','
 }
 
 impl Display for TokenType {
@@ -68,6 +77,15 @@ impl Display for TokenType {
             TokenType::OpenBrace => write!(f, "OpenBrace"),
             TokenType::CloseBrace => write!(f, "CloseBrace"),
             TokenType::Semicolon => write!(f, "Semicolon"),
+            TokenType::Colon => write!(f, "Colon"),
+            TokenType::FrontSlash => write!(f, "FrontsSlash"),
+            TokenType::Underscore => write!(f, "Underscore"),
+            TokenType::Hyphen => write!(f, "Hyphen"),
+            TokenType::BackSlash => write!(f, "BackSlash"),
+            TokenType::Asterisk => write!(f, "Asterisk"),
+            TokenType::Quote => write!(f, "Quote"),
+            TokenType::DoubleQuote => write!(f, "DoubleQuote"),
+            TokenType::Comma => write!(f, "Comma"),
         }
     }
 }

@@ -9,6 +9,15 @@ struct Args {
     mode: CompilationMode,
 }
 
+impl Default for Args {
+    fn default() -> Self {
+        Args {
+            file: PathBuf::default(),
+            mode: CompilationMode::Full,
+        }
+    }
+}
+
 /// A validated wrapper over args where the file is known to be valid and has already been read
 struct File {
     args: Args,
@@ -63,6 +72,7 @@ impl Error for CliError {}
 
 fn parse_args() -> Result<Args, CliError> {
     let mut args: Vec<_> = std::env::args_os().collect();
+    let mut constructed_args = Args::default();
 
     // First argument is the executable name
     args.remove(0);
@@ -72,38 +82,27 @@ fn parse_args() -> Result<Args, CliError> {
         return Err(CliError);
     }
 
-    let file: PathBuf = args.remove(0).into();
+    while let Some(arg) = args.pop() {
+        let arg = arg.into_string().unwrap();
+        match arg.as_str() {
+            "--lex" => constructed_args.mode = CompilationMode::Lex,
+            "--parse" => constructed_args.mode = CompilationMode::Parse,
+            "--codegen" => constructed_args.mode = CompilationMode::Codegen,
+            "-S" => constructed_args.mode = CompilationMode::NakedAssembly,
+            file => {
+                let path: PathBuf = file.into();
+                constructed_args.file = path;
+            }
+        };
+    }
 
-    if !file.exists() {
+    if !constructed_args.file.exists() {
+        eprintln!("{:?}", constructed_args.file);
         // TODO No such file exists
         return Err(CliError);
     }
 
-    if args.len() == 0 {
-        return Ok(Args {
-            file,
-            mode: CompilationMode::default(),
-        });
-    }
-
-    if args.len() > 1 {
-        // TODO Too many arguments
-        return Err(CliError);
-    }
-
-    // TODO invalid flag arg
-    let arg = args.remove(0).into_string().map_err(|_| CliError)?;
-
-    let mode = match arg.as_str() {
-        "--lex" => CompilationMode::Lex,
-        "--parse" => CompilationMode::Parse,
-        "--codegen" => CompilationMode::Codegen,
-        "-S" => CompilationMode::NakedAssembly,
-        // TODO invalid flag arg
-        _ => return Err(CliError),
-    };
-
-    Ok(Args { file, mode })
+    Ok(constructed_args)
 }
 
 fn usage_help() {
@@ -113,7 +112,6 @@ fn usage_help() {
 fn lex(file: File) {
     let output = Lexer::lex(&file.contents);
 
-    // TODO implement display for tokenized output?
     println!("{output}");
 }
 
