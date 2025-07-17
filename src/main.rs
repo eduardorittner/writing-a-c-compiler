@@ -4,6 +4,7 @@ use std::{error::Error, path::PathBuf};
 /// Cli arguments
 ///
 /// rustcc <path> --[lex|parse|codegen]
+#[derive(Debug, PartialEq)]
 struct Args {
     file: PathBuf,
     mode: CompilationMode,
@@ -35,7 +36,7 @@ impl TryFrom<Args> for File {
 
 /// Compilation mode
 /// Default is Full, which generates the executable
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum CompilationMode {
     /// Stop after lexing
     Lex,
@@ -59,7 +60,7 @@ impl Default for CompilationMode {
 // 1. Missing file path
 // 2. Invalid file path
 // 3. Invalid flags
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct CliError;
 
 impl std::fmt::Display for CliError {
@@ -70,8 +71,7 @@ impl std::fmt::Display for CliError {
 
 impl Error for CliError {}
 
-fn parse_args() -> Result<Args, CliError> {
-    let mut args: Vec<_> = std::env::args_os().collect();
+fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
     let mut constructed_args = Args::default();
 
     // First argument is the executable name
@@ -83,7 +83,6 @@ fn parse_args() -> Result<Args, CliError> {
     }
 
     while let Some(arg) = args.pop() {
-        let arg = arg.into_string().unwrap();
         match arg.as_str() {
             "--lex" => constructed_args.mode = CompilationMode::Lex,
             "--parse" => constructed_args.mode = CompilationMode::Parse,
@@ -116,7 +115,11 @@ fn lex(file: File) {
 }
 
 fn main() {
-    if let Ok(args) = parse_args() {
+    if let Ok(args) = parse_args(
+        std::env::args_os()
+            .map(|s| s.into_string().unwrap())
+            .collect(),
+    ) {
         match File::try_from(args) {
             Ok(file) => match file.args.mode {
                 CompilationMode::Lex => lex(file),
@@ -132,4 +135,74 @@ fn main() {
     } else {
         usage_help()
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use crate::{Args, CliError, CompilationMode, parse_args};
+
+    macro_rules! args [
+        ($x:expr) => (
+            $x.into_iter().map(|s| s.to_string()).collect()
+        );
+    ];
+
+    #[test]
+    fn no_args() {
+        let args = args![vec![""]];
+        let args = parse_args(args);
+
+        assert_eq!(args, Err(CliError));
+    }
+
+    #[test]
+    fn one_arg() {
+        // File needs to exist
+        let file = "Cargo.toml";
+        let args = args![vec!["", file]];
+        let args = parse_args(args);
+
+        assert_eq!(
+            args,
+            Ok(Args {
+                file: PathBuf::from(file),
+                mode: CompilationMode::Full
+            })
+        );
+    }
+
+    #[test]
+    fn flag_with_no_file() {
+        let args = args![vec!["", "--lex"]];
+        let args = parse_args(args);
+
+        assert_eq!(args, Err(CliError));
+    }
+
+    #[test]
+    fn flag_with_file() {
+        let file = "Cargo.toml";
+        let args = args![vec!["", file, "--lex"]];
+        let args = parse_args(args);
+
+        assert_eq!(
+            args,
+            Ok(Args {
+                file: PathBuf::from(file),
+                mode: CompilationMode::Lex
+            })
+        );
+    }
+
+    #[test]
+    fn flag_with_file_order_shouldnt_matter() {
+        let file = "Cargo.toml";
+
+        assert_eq!(
+            parse_args(args![vec!["", file, "--lex"]]),
+            parse_args(args![vec!["", "--lex", file]])
+        );
+    }
 }
