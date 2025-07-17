@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 lex = { path = "./src/lex" }
+ast = { path = "./src/ast" }
