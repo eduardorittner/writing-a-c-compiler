@@ -58,7 +58,6 @@ pub enum TokenType {
     Colon,       // ':'
     FrontSlash,  // '/'
     BackSlash,   // '\'
-    Underscore,  // '_'
     Hyphen,      // '-'
     Asterisk,    // '*'
     Quote,       // "'"
@@ -79,7 +78,6 @@ impl Display for TokenType {
             TokenType::Semicolon => write!(f, "Semicolon"),
             TokenType::Colon => write!(f, "Colon"),
             TokenType::FrontSlash => write!(f, "FrontsSlash"),
-            TokenType::Underscore => write!(f, "Underscore"),
             TokenType::Hyphen => write!(f, "Hyphen"),
             TokenType::BackSlash => write!(f, "BackSlash"),
             TokenType::Asterisk => write!(f, "Asterisk"),
