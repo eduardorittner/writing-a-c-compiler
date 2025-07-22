@@ -1,12 +1,14 @@
 use std::ops::Index;
 
+use lex::Token;
+
 macro_rules! node_type(
     ($type:ident, $typeId:ident) => {
 
         impl<'a> From<&'a Node> for &'a $type {
             fn from(node: &'a Node) -> &'a $type {
-                match node {
-                    Node::$type(inner) => inner,
+                match &node.kind {
+                    NodeKind::$type(inner) => inner,
                     _ => panic!(),
                 }
             }
@@ -24,15 +26,23 @@ macro_rules! node_type(
     };
 );
 
-/// A Node is a enum of all possible AST nodes
+/// An AST Node
+///
+/// A node has an optional reference to a token, since every ast node has at most one direct token, and may have zero.
+pub struct Node {
+    kind: NodeKind,
+    token: Option<Token>,
+}
+
+/// A NodeKind is a enum of all possible AST nodes
 ///
 /// All variants contain a struct with the same node which holds the actual data, this is done so a
 /// function can specify exactly what AST nodes it consumes/produces. Any reference to other nodes
-/// is done through an Id, which is just the index of that Node inside the `Tree` vector. Ids are
+/// is done through an Id, which is just the index of that NodeKind inside the `Tree` vector. Ids are
 /// also typed to again allow for explictly declaring what each node holds, even though they're all
 /// stored contiguously. Trying to access a node as another variant will result in a panic, this
 /// should never happen if we construct the AST correctly, since it's immutable.
-pub enum Node {
+pub enum NodeKind {
     Program(Program),
     FnDef(FnDef),
     Stmt(Stmt),
