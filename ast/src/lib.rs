@@ -31,7 +31,6 @@ macro_rules! node_type(
 /// A node has an optional reference to a token, since every ast node has at most one direct token, and may have zero.
 pub struct Node {
     kind: NodeKind,
-    token: Option<Token>,
 }
 
 /// A NodeKind is a enum of all possible AST nodes
@@ -59,11 +58,28 @@ pub struct FnDef {
     body: StmtId,
 }
 
-pub enum Expr {
-    Constant(i64),
+pub enum Stmt {
+    Return {
+        expr: ExprId,
+        token: Token,
+    },
+    If {
+        // If
+        cond: ExprId,
+        // Then
+        cond_true: StmtId,
+        // Else
+        cond_false: Option<StmtId>,
+    },
 }
 
-pub struct Ident(String); // Todo String should be interned
+pub enum Expr {
+    Constant { value: i64, token: Token },
+}
+
+pub struct Ident {
+    token: Token,
+}
 
 pub struct NodeId(usize);
 pub struct ProgramId(usize);
@@ -76,15 +92,35 @@ node_type!(Program, ProgramId);
 node_type!(FnDef, FnDefId);
 node_type!(Stmt, StmtId);
 node_type!(Expr, ExprId);
-
-pub enum Stmt {
-    Return(ExprId),
-}
+node_type!(Ident, IdentId);
 
 pub struct Tree {
     nodes: Vec<Node>,
 }
 
+<<<<<<< Updated upstream
+||||||| Stash base
+// TODO fix this
+impl<T> Tree {
+    pub fn push(&mut self, node: T)
+    where
+        T: Into<Node>,
+    {
+        self.nodes.push(node.into())
+    }
+}
+
+=======
+impl Tree {
+    pub fn push<T>(&mut self, node: T)
+    where
+        T: Into<Node>,
+    {
+        self.nodes.push(node.into())
+    }
+}
+
+>>>>>>> Stashed changes
 impl Index<NodeId> for Tree {
     type Output = Node;
 
