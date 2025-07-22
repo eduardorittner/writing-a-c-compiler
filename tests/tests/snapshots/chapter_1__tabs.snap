@@ -1,0 +1,117 @@
+---
+source: tests/tests/chapter_1.rs
+expression: tokens
+---
+TokenizedOutput {
+    source: "int\tmain\t(\tvoid)\t{\treturn\t0\t;\t}",
+    tokens: [
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 0,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 1,
+        },
+        Token {
+            ttype: OpenParen,
+            has_error: false,
+            handle: 2,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 3,
+        },
+        Token {
+            ttype: CloseParen,
+            has_error: false,
+            handle: 4,
+        },
+        Token {
+            ttype: OpenBrace,
+            has_error: false,
+            handle: 5,
+        },
+        Token {
+            ttype: Ident,
+            has_error: false,
+            handle: 6,
+        },
+        Token {
+            ttype: Constant,
+            has_error: false,
+            handle: 7,
+        },
+        Token {
+            ttype: Semicolon,
+            has_error: false,
+            handle: 8,
+        },
+        Token {
+            ttype: CloseBrace,
+            has_error: false,
+            handle: 9,
+        },
+    ],
+    token_sources: [
+        TokenSource {
+            start: 0,
+            end: 3,
+            line: 0,
+        },
+        TokenSource {
+            start: 4,
+            end: 8,
+            line: 0,
+        },
+        TokenSource {
+            start: 9,
+            end: 10,
+            line: 0,
+        },
+        TokenSource {
+            start: 11,
+            end: 15,
+            line: 0,
+        },
+        TokenSource {
+            start: 15,
+            end: 16,
+            line: 0,
+        },
+        TokenSource {
+            start: 17,
+            end: 18,
+            line: 0,
+        },
+        TokenSource {
+            start: 19,
+            end: 25,
+            line: 0,
+        },
+        TokenSource {
+            start: 26,
+            end: 27,
+            line: 0,
+        },
+        TokenSource {
+            start: 28,
+            end: 29,
+            line: 0,
+        },
+        TokenSource {
+            start: 30,
+            end: 31,
+            line: 0,
+        },
+    ],
+    lines: [
+        Line {
+            start: 0,
+            end: 31,
+        },
+    ],
+}
