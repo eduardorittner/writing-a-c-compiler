@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = [ "lex", "ast", "cli" ]
+members = [ "lex", "ast", "cli" , "parse"]
 
 # Used since insta recommends building it in release mode for faster tests
 [profile.dev.package]

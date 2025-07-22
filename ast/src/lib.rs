@@ -5,11 +5,31 @@ use lex::Token;
 macro_rules! node_type(
     ($type:ident, $typeId:ident) => {
 
+        impl From<usize> for $typeId {
+            fn from(value: usize) -> Self {
+                Self(value)
+            }
+        }
+
+        impl From<$typeId> for usize {
+            fn from(value: $typeId) -> Self {
+                value.0
+            }
+        }
+
         impl<'a> From<&'a Node> for &'a $type {
             fn from(node: &'a Node) -> &'a $type {
                 match &node.kind {
                     NodeKind::$type(inner) => inner,
                     _ => panic!(),
+                }
+            }
+        }
+
+        impl From<$type> for Node {
+            fn from(ttype: $type) -> Node {
+                Node {
+                    kind: NodeKind::$type(ttype)
                 }
             }
         }
@@ -41,23 +61,28 @@ pub struct Node {
 /// also typed to again allow for explictly declaring what each node holds, even though they're all
 /// stored contiguously. Trying to access a node as another variant will result in a panic, this
 /// should never happen if we construct the AST correctly, since it's immutable.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum NodeKind {
     Program(Program),
     FnDef(FnDef),
     Stmt(Stmt),
     Expr(Expr),
     Ident(Ident),
+    Constant(Constant),
 }
 
 // TODO every node should contain a reference to its underlying token
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Program(FnDefId);
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct FnDef {
     name: IdentId,
     body: StmtId,
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Stmt {
     Return {
         expr: ExprId,
@@ -73,54 +98,69 @@ pub enum Stmt {
     },
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Expr {
     Constant { value: i64, token: Token },
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Ident {
     token: Token,
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct Constant {
+    pub value: i64,
+    pub token: Token,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct NodeId(usize);
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct ProgramId(usize);
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct FnDefId(usize);
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct StmtId(usize);
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct ExprId(usize);
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct IdentId(usize);
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct ConstantId(usize);
 
 node_type!(Program, ProgramId);
 node_type!(FnDef, FnDefId);
 node_type!(Stmt, StmtId);
 node_type!(Expr, ExprId);
 node_type!(Ident, IdentId);
+node_type!(Constant, ConstantId);
 
 pub struct Tree {
     nodes: Vec<Node>,
 }
 
-<<<<<<< Updated upstream
-||||||| Stash base
-// TODO fix this
-impl<T> Tree {
-    pub fn push(&mut self, node: T)
-    where
-        T: Into<Node>,
-    {
-        self.nodes.push(node.into())
-    }
-}
-
-=======
 impl Tree {
-    pub fn push<T>(&mut self, node: T)
+    pub fn new() -> Tree {
+        Tree { nodes: Vec::new() }
+    }
+
+    pub fn with_capacity(cap: usize) -> Tree {
+        Tree {
+            nodes: Vec::with_capacity(cap),
+        }
+    }
+
+    pub fn push<T, Id>(&mut self, node: T) -> Id
     where
         T: Into<Node>,
+        Id: From<usize>,
     {
-        self.nodes.push(node.into())
+        self.nodes.push(node.into());
+        (self.nodes.len() - 1).into()
     }
 }
 
->>>>>>> Stashed changes
 impl Index<NodeId> for Tree {
     type Output = Node;
 

@@ -6,7 +6,7 @@ use tracing::{Level, span};
 
 use crate::{line::Line, token::TokenSource};
 
-use output::TokenizedOutput;
+pub use output::TokenizedOutput;
 
 pub struct Lexer<'src> {
     source: &'src str,
@@ -98,7 +98,7 @@ impl Lexer<'_> {
 
         loop {
             match chars.next() {
-                Some(c) if matches!(c, '1'..='9' | '_') => (), // We allow '_' inside numbers
+                Some(c) if matches!(c, '0'..='9' | '_') => (), // We allow '_' inside numbers
                 _ => break,
             };
             self.offset += c.len_utf8();
@@ -174,9 +174,16 @@ impl Lexer<'_> {
 }
 
 mod output {
-    use std::fmt::{self, Display};
+    use std::{
+        fmt::{self, Display},
+        ops::Index,
+    };
 
-    use crate::{Token, TokenType, line::Line, token::TokenSource};
+    use crate::{
+        Token, TokenType,
+        line::Line,
+        token::{Keyword, TokenSource},
+    };
 
     #[derive(Debug)]
     pub struct TokenizedOutput<'src> {
@@ -195,6 +202,22 @@ mod output {
                 token_sources: Vec::new(),
                 lines: Vec::new(),
             }
+        }
+
+        pub fn len(&self) -> usize {
+            self.tokens.len()
+        }
+
+        pub fn get(&self, index: usize) -> Option<Token> {
+            self.tokens.get(index).map(|t| t.clone())
+        }
+
+        pub fn token_source(&self, handle: usize) -> TokenSource {
+            *self.token_sources.get(handle).unwrap()
+        }
+
+        pub fn token_text(&self, handle: usize) -> &'src str {
+            self.token_source(handle).fmt(self.source)
         }
 
         pub fn tokens(&self) -> &[Token] {
@@ -254,7 +277,7 @@ mod output {
 
 #[cfg(test)]
 mod tests {
-    use crate::Lexer;
+    use crate::{Lexer, TokenType};
 
     macro_rules! snapshot_test (
         ($string:expr) => {
@@ -297,5 +320,19 @@ mod tests {
         snapshot_test!(
             "__underscores __more_under_scores_ some1number234 _under1_score_2_with3_numbers5"
         );
+    }
+
+    #[test]
+    fn i64_max() {
+        let source = format!("{}", i64::MAX);
+        let mut lexer = Lexer::new(&source);
+
+        lexer.run_lexer();
+
+        let output = lexer.output;
+        assert_eq!(output.len(), 1);
+
+        let token = output.get(0).unwrap();
+        assert_eq!(&source, output.token_source(token.handle).fmt(&source));
     }
 }
