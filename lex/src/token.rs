@@ -45,6 +45,8 @@ pub enum TokenType {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Keyword {
     Return,
+    Int,
+    Void,
 }
 
 impl Display for Keyword {
@@ -53,6 +55,8 @@ impl Display for Keyword {
             f,
             "{}",
             match self {
+                Keyword::Void => "void",
+                Keyword::Int => "int",
                 Keyword::Return => "return",
             }
         )

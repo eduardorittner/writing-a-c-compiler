@@ -174,16 +174,9 @@ impl Lexer<'_> {
 }
 
 mod output {
-    use std::{
-        fmt::{self, Display},
-        ops::Index,
-    };
+    use std::fmt::{self, Display};
 
-    use crate::{
-        Token, TokenType,
-        line::Line,
-        token::{Keyword, TokenSource},
-    };
+    use crate::{Token, TokenType, line::Line, token::TokenSource};
 
     #[derive(Debug)]
     pub struct TokenizedOutput<'src> {

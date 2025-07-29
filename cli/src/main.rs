@@ -1,4 +1,5 @@
 use lex::Lexer;
+use parse::Parser;
 use std::{error::Error, path::PathBuf};
 
 /// Cli arguments
@@ -56,11 +57,17 @@ enum CompilationMode {
 // 2. Invalid file path
 // 3. Invalid flags
 #[derive(Debug, PartialEq)]
-struct CliError;
+enum CliError {
+    NoFileArg,
+    NoSuchFile,
+}
 
 impl std::fmt::Display for CliError {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CliError::NoFileArg => write!(f, "No file was provided"),
+            CliError::NoSuchFile => write!(f, "File doesn't exist"),
+        }
     }
 }
 
@@ -74,7 +81,7 @@ fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
 
     if args.is_empty() {
         // TODO No file argument
-        return Err(CliError);
+        return Err(CliError::NoFileArg);
     }
 
     while let Some(arg) = args.pop() {
@@ -83,6 +90,7 @@ fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
             "--parse" => constructed_args.mode = CompilationMode::Parse,
             "--codegen" => constructed_args.mode = CompilationMode::Codegen,
             "-S" => constructed_args.mode = CompilationMode::NakedAssembly,
+            "--full" => constructed_args.mode = CompilationMode::Full,
             file => {
                 let path: PathBuf = file.into();
                 constructed_args.file = path;
@@ -93,20 +101,35 @@ fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
     if !constructed_args.file.exists() {
         eprintln!("{:?}", constructed_args.file);
         // TODO No such file exists
-        return Err(CliError);
+        return Err(CliError::NoSuchFile);
     }
 
     Ok(constructed_args)
 }
 
 fn usage_help() {
-    todo!()
+    println!("Usage:");
+    println!("ccompiler [file] [options]");
+    println!("");
+    println!("Options:");
+    println!("  --lex: Only runs the lexer");
+    println!("  --parse: Only runs the parser");
+    println!("  --codegen: Runs up to codegen but doesn't emit any file");
+    println!("  -S: Emits naked assembly file");
+    println!("  --full: Runs the whole pipeline and outputs final executable");
 }
 
 fn lex(file: File) {
     let output = Lexer::lex(&file.contents);
 
     println!("{output}");
+}
+
+fn parse(file: File) {
+    let output = Lexer::lex(&file.contents);
+    let mut parser = Parser::from_tokens(&output);
+    parser.parse();
+    println!("{}", parser.nodes());
 }
 
 fn main() {
@@ -118,7 +141,7 @@ fn main() {
         match File::try_from(args) {
             Ok(file) => match file.args.mode {
                 CompilationMode::Lex => lex(file),
-                CompilationMode::Parse => todo!(),
+                CompilationMode::Parse => parse(file),
                 CompilationMode::Codegen => todo!(),
                 CompilationMode::NakedAssembly => todo!(),
                 CompilationMode::Full => todo!(),

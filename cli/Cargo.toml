@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 lex = { path = "../lex" }
+parse = { path = "../parse" }

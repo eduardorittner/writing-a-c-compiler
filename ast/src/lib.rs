@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::Index};
+use std::ops::Index;
 
 use lex::{Token, TokenizedOutput};
 
@@ -87,12 +87,14 @@ pub enum NodeKind {
 // TODO every node should contain a reference to its underlying token
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct Program(FnDefId);
+pub struct Program {
+    pub main: FnDefId,
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct FnDef {
-    name: IdentId,
-    body: StmtId,
+    pub name: IdentId,
+    pub body: StmtId,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -113,12 +115,12 @@ pub enum Stmt {
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Expr {
-    Constant { value: i64, token: Token },
+    Constant { constant: ConstantId },
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Ident {
-    token: Token,
+    pub token: Token,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
