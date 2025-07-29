@@ -1,6 +1,8 @@
-use std::ops::Index;
+use std::{fmt::Display, ops::Index};
 
-use lex::Token;
+use lex::{Token, TokenizedOutput};
+
+pub mod fmt;
 
 macro_rules! node_type(
     ($type:ident, $typeId:ident) => {
@@ -34,12 +36,22 @@ macro_rules! node_type(
             }
         }
 
-        impl Index<$typeId> for Tree {
+        impl<'src> Index<$typeId> for Tree<'src> {
             type Output = $type;
 
             // SAFETY: Since the ast is immutable and we only construct valid `NodeId`s, all `NodeId`s
             // are always valid
             fn index(&self, index: $typeId) -> &Self::Output {
+                self.nodes.get(index.0).unwrap().into()
+            }
+        }
+
+        impl<'src> Index<&$typeId> for Tree<'src> {
+            type Output = $type;
+
+            // SAFETY: Since the ast is immutable and we only construct valid `NodeId`s, all `NodeId`s
+            // are always valid
+            fn index(&self, index: &$typeId) -> &Self::Output {
                 self.nodes.get(index.0).unwrap().into()
             }
         }
@@ -49,6 +61,7 @@ macro_rules! node_type(
 /// An AST Node
 ///
 /// A node has an optional reference to a token, since every ast node has at most one direct token, and may have zero.
+#[derive(Debug)]
 pub struct Node {
     kind: NodeKind,
 }
@@ -136,17 +149,39 @@ node_type!(Expr, ExprId);
 node_type!(Ident, IdentId);
 node_type!(Constant, ConstantId);
 
-pub struct Tree {
+/// An AST representation
+///
+/// Nodes are pushed once they're complete, which means that subnodes appear before their parent
+/// nodes.
+///
+/// For example, a program like
+///
+/// ```c
+/// int main() {
+///     return 0;
+/// }
+/// ```
+///
+/// will result in a tree like
+///
+/// [type "int", expr "0", return, function "main"]
+#[derive(Debug)]
+pub struct Tree<'src> {
+    tokens: &'src TokenizedOutput<'src>,
     nodes: Vec<Node>,
 }
 
-impl Tree {
-    pub fn new() -> Tree {
-        Tree { nodes: Vec::new() }
+impl<'src> Tree<'src> {
+    pub fn new(tokens: &'src TokenizedOutput<'src>) -> Tree<'src> {
+        Tree {
+            tokens,
+            nodes: Vec::new(),
+        }
     }
 
-    pub fn with_capacity(cap: usize) -> Tree {
+    pub fn with_capacity(tokens: &'src TokenizedOutput<'src>, cap: usize) -> Tree<'src> {
         Tree {
+            tokens,
             nodes: Vec::with_capacity(cap),
         }
     }
@@ -159,9 +194,22 @@ impl Tree {
         self.nodes.push(node.into());
         (self.nodes.len() - 1).into()
     }
+
+    fn program_node(&self) -> &Program {
+        let program_index = self
+            .nodes
+            .iter()
+            .position(|n| match n.kind {
+                NodeKind::Program(_) => true,
+                _ => false,
+            })
+            .unwrap();
+
+        self.index(ProgramId::from(program_index))
+    }
 }
 
-impl Index<NodeId> for Tree {
+impl Index<NodeId> for Tree<'_> {
     type Output = Node;
 
     // SAFETY: Since the ast is immutable and we only construct valid `NodeId`s, all `NodeId`s
