@@ -98,6 +98,10 @@ fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
         };
     }
 
+    if constructed_args.file == PathBuf::default() {
+        return Err(CliError::NoFileArg);
+    }
+
     if !constructed_args.file.exists() {
         eprintln!("{:?}", constructed_args.file);
         // TODO No such file exists
@@ -172,7 +176,7 @@ mod tests {
         let args = args![vec![""]];
         let args = parse_args(args);
 
-        assert_eq!(args, Err(CliError));
+        assert_eq!(args, Err(CliError::NoFileArg));
     }
 
     #[test]
@@ -196,7 +200,7 @@ mod tests {
         let args = args![vec!["", "--lex"]];
         let args = parse_args(args);
 
-        assert_eq!(args, Err(CliError));
+        assert_eq!(args, Err(CliError::NoFileArg));
     }
 
     #[test]
