@@ -1,8 +1,8 @@
 use ast::Tree;
 
-use crate::{FnDef, NodeKind, Program};
+use crate::{FnDef, Instruction, NodeKind, Operand, Program};
 
-trait Lower {
+pub trait Lower {
     type Output;
 
     fn lower(&self, tree: &Tree) -> Self::Output;
@@ -23,9 +23,12 @@ impl Lower for ast::NodeKind {
         match self {
             ast::NodeKind::Program(program) => NodeKind::Program(program.lower(tree)),
             ast::NodeKind::FnDef(fn_def) => NodeKind::FnDef(fn_def.lower(tree)),
-            ast::NodeKind::Stmt(stmt) => todo!(),
-            ast::NodeKind::Expr(expr) => todo!(),
+            ast::NodeKind::Stmt(stmt) => NodeKind::Instructions(stmt.lower(tree)),
+            ast::NodeKind::Expr(expr) => NodeKind::Operand(Operand::Immediate(expr.lower(tree))),
             ast::NodeKind::Ident(ident) => todo!(),
+            ast::NodeKind::Constant(constant) => {
+                NodeKind::Operand(Operand::Immediate(constant.lower(tree)))
+            }
         }
     }
 }
@@ -44,28 +47,48 @@ impl Lower for ast::FnDef {
     type Output = FnDef;
 
     fn lower(&self, tree: &Tree) -> FnDef {
-        let a = tree[self.name];
         FnDef {
-            name: tree[self.name],
-            body: todo!(),
+            name: tree
+                .tokens
+                .token_text(tree[self.name].token.handle)
+                .to_string(),
+            body: tree[self.body].lower(tree),
         }
     }
 }
 
 impl Lower for ast::Stmt {
-    fn lower(&self, tree: &Tree) -> NodeKind {
-        todo!()
+    type Output = Vec<Instruction>;
+
+    fn lower(&self, tree: &Tree) -> Vec<Instruction> {
+        let mut instrs = Vec::new();
+        match self {
+            ast::Stmt::Return { expr, .. } => {
+                instrs.push(Instruction::Mov {
+                    src: Operand::Immediate(tree[expr].lower(tree)),
+                    dst: Operand::Register,
+                });
+            }
+            ast::Stmt::If { .. } => todo!(),
+        };
+        instrs
     }
 }
 
 impl Lower for ast::Expr {
-    fn lower(&self, tree: &Tree) -> NodeKind {
-        todo!()
+    type Output = i64;
+
+    fn lower(&self, tree: &Tree) -> i64 {
+        match self {
+            ast::Expr::Constant { constant } => tree[constant].lower(tree),
+        }
     }
 }
 
-impl Lower for ast::Ident {
-    fn lower(&self, tree: &Tree) -> NodeKind {
-        todo!()
+impl Lower for ast::Constant {
+    type Output = i64;
+
+    fn lower(&self, _tree: &Tree) -> i64 {
+        self.value
     }
 }

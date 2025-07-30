@@ -3,6 +3,7 @@ use std::ops::Index;
 use lex::{Token, TokenizedOutput};
 
 pub mod fmt;
+pub mod traversal;
 
 macro_rules! node_type(
     ($type:ident, $typeId:ident) => {
@@ -63,7 +64,7 @@ macro_rules! node_type(
 /// A node has an optional reference to a token, since every ast node has at most one direct token, and may have zero.
 #[derive(Debug)]
 pub struct Node {
-    kind: NodeKind,
+    pub kind: NodeKind,
 }
 
 /// A NodeKind is a enum of all possible AST nodes
@@ -169,8 +170,8 @@ node_type!(Constant, ConstantId);
 /// [type "int", expr "0", return, function "main"]
 #[derive(Debug)]
 pub struct Tree<'src> {
-    tokens: &'src TokenizedOutput<'src>,
-    nodes: Vec<Node>,
+    pub tokens: &'src TokenizedOutput<'src>,
+    pub nodes: Vec<Node>,
 }
 
 impl<'src> Tree<'src> {
@@ -197,7 +198,7 @@ impl<'src> Tree<'src> {
         (self.nodes.len() - 1).into()
     }
 
-    fn program_node(&self) -> &Program {
+    pub fn program_node(&self) -> &Node {
         let program_index = self
             .nodes
             .iter()
@@ -207,7 +208,7 @@ impl<'src> Tree<'src> {
             })
             .unwrap();
 
-        self.index(ProgramId::from(program_index))
+        &self[NodeId(program_index)]
     }
 }
 

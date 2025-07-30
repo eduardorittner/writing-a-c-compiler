@@ -1,11 +1,18 @@
+use ast::Tree;
 use lex::Token;
+use lower::Lower;
 
+pub mod fmt;
 pub mod lower;
+
+pub struct AAst {
+    nodes: Program,
+}
 
 pub enum NodeKind {
     Program(Program),
     FnDef(FnDef),
-    Instruction(Instruction),
+    Instructions(Vec<Instruction>),
     Operand(Operand),
 }
 
@@ -14,7 +21,7 @@ pub struct Program {
 }
 
 pub struct FnDef {
-    name: Token,
+    name: String,
     body: Vec<Instruction>,
 }
 
@@ -25,4 +32,13 @@ pub enum Instruction {
 pub enum Operand {
     Immediate(i64),
     Register,
+}
+
+pub fn lower(input: &Tree) -> AAst {
+    AAst {
+        nodes: match input.program_node().kind {
+            ast::NodeKind::Program(program) => program.lower(input),
+            _ => unreachable!(),
+        },
+    }
 }

@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 lex = { path = "../lex" }
 parse = { path = "../parse" }
+assembly-ast = { path = "../assembly-ast/" }

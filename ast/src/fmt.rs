@@ -17,7 +17,12 @@ impl<'src> Display for Tree<'src> {
         // find program definition and go from there
         let prog_node = self.program_node();
 
-        prog_node.fmt_node(0, self, f);
+        let node = match prog_node.kind {
+            crate::NodeKind::Program(program) => program,
+            _ => unreachable!(),
+        };
+
+        node.fmt_node(0, self, f);
 
         Ok(())
     }

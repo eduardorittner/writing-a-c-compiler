@@ -1,3 +1,4 @@
+use assembly_ast::lower;
 use lex::Lexer;
 use parse::Parser;
 use std::{error::Error, path::PathBuf};
@@ -136,27 +137,37 @@ fn parse(file: File) {
     println!("{}", parser.nodes());
 }
 
+fn codegen(file: File) {
+    let output = Lexer::lex(&file.contents);
+    let mut parser = Parser::from_tokens(&output);
+    parser.parse();
+    let assembly_ast = lower(parser.nodes());
+    println!("{}", assembly_ast);
+}
+
 fn main() {
-    if let Ok(args) = parse_args(
+    match parse_args(
         std::env::args_os()
             .map(|s| s.into_string().unwrap())
             .collect(),
     ) {
-        match File::try_from(args) {
+        Ok(args) => match File::try_from(args) {
             Ok(file) => match file.args.mode {
                 CompilationMode::Lex => lex(file),
                 CompilationMode::Parse => parse(file),
-                CompilationMode::Codegen => todo!(),
+                CompilationMode::Codegen => codegen(file),
                 CompilationMode::NakedAssembly => todo!(),
                 CompilationMode::Full => todo!(),
             },
             Err(e) => {
                 eprintln!("Error reading file {e:?}");
             }
+        },
+        Err(e) => {
+            eprintln!("Invalid args: {e:?}");
+            usage_help()
         }
-    } else {
-        usage_help()
-    };
+    }
 }
 
 #[cfg(test)]
