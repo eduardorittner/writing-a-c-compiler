@@ -1,6 +1,7 @@
 use ast::Tree;
 use lex::Token;
 use lower::Lower;
+use tracing::{Level, span};
 
 pub mod fmt;
 pub mod lower;
@@ -35,6 +36,8 @@ pub enum Operand {
 }
 
 pub fn lower(input: &Tree) -> AAst {
+    let _ = span!(Level::TRACE, "tacky lowering");
+
     AAst {
         nodes: match input.program_node().kind {
             ast::NodeKind::Program(program) => program.lower(input),

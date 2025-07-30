@@ -3,9 +3,9 @@ name = "lex"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-tracing = "0.1.41"
-
 [dev-dependencies]
 insta = "1.43.1"
+
+[dependencies]
+tracing = "0.1.41"
 

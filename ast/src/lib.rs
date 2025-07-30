@@ -3,7 +3,6 @@ use std::ops::Index;
 use lex::{Token, TokenizedOutput};
 
 pub mod fmt;
-pub mod traversal;
 
 macro_rules! node_type(
     ($type:ident, $typeId:ident) => {

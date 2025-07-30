@@ -2,7 +2,7 @@ pub mod line;
 pub mod token;
 
 pub use token::{Token, TokenType};
-use tracing::{Level, span};
+use tracing::{Level, info, instrument, span, trace};
 
 use crate::{line::Line, token::TokenSource};
 
@@ -119,9 +119,9 @@ impl Lexer<'_> {
     }
 
     pub fn lex(source: &str) -> TokenizedOutput<'_> {
-        let mut lexer = Self::new(source);
-
         let _ = span!(Level::TRACE, "Lexing").entered();
+
+        let mut lexer = Self::new(source);
 
         lexer.run_lexer();
         lexer.output

@@ -40,7 +40,7 @@ impl DisplayNode for FnDef {
         self.writeln(indent + 1, "instructions = [", f);
         self.body
             .iter()
-            .for_each(|instr| instr.fmt_node(indent + 1, f));
+            .for_each(|instr| instr.fmt_node(indent + 2, f));
         self.writeln(indent + 1, "]", f);
         self.writeln(indent, ")", f);
     }

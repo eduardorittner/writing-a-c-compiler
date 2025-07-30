@@ -7,3 +7,5 @@ edition = "2024"
 lex = { path = "../lex" }
 parse = { path = "../parse" }
 assembly-ast = { path = "../assembly-ast/" }
+tracing-subscriber = "0.3.19"
+tracing = "0.1.41"

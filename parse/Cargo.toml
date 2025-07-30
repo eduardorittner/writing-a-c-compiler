@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 lex = { path = "../lex" }
 ast = { path = "../ast" }
+tracing = "0.1.41"
 

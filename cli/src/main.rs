@@ -2,6 +2,12 @@ use assembly_ast::lower;
 use lex::Lexer;
 use parse::Parser;
 use std::{error::Error, path::PathBuf};
+use tracing::info;
+use tracing_subscriber::{
+    fmt::{self, format::FmtSpan},
+    layer::SubscriberExt,
+    util::SubscriberInitExt,
+};
 
 /// Cli arguments
 ///
@@ -146,6 +152,12 @@ fn codegen(file: File) {
 }
 
 fn main() {
+    tracing_subscriber::registry()
+        .with(fmt::layer().with_span_events(FmtSpan::CLOSE))
+        .init();
+
+    info!("Starting");
+
     match parse_args(
         std::env::args_os()
             .map(|s| s.into_string().unwrap())

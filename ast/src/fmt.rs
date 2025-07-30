@@ -98,7 +98,7 @@ impl DisplayNode for Expr {
             Expr::Constant { constant, .. } => {
                 self.write(indent, "Constant(", f);
                 tree[constant].fmt_node(indent + 1, tree, f);
-                self.writeln(indent, ")", f);
+                self.writeln(0, ")", f);
             }
         }
     }

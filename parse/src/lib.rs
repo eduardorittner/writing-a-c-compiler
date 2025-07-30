@@ -3,6 +3,7 @@ use ast::{
     ProgramId, Stmt, StmtId, Tree,
 };
 use lex::{Token, TokenType, TokenizedOutput, token::Keyword};
+use tracing::{Level, instrument, span, trace};
 
 pub struct Parser<'src> {
     input: &'src TokenizedOutput<'src>,
@@ -55,6 +56,8 @@ impl<'src> Parser<'src> {
     }
 
     pub fn parse(&mut self) {
+        let _ = span!(Level::TRACE, "Parsing").entered();
+
         let main = self.parse_function_def();
         let program_node = Program { main };
         self.nodes.push::<Program, ProgramId>(program_node);
