@@ -1,5 +1,4 @@
 use ast::Tree;
-use lex::Token;
 use lower::Lower;
 use tracing::{Level, span};
 

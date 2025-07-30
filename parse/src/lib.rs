@@ -1,9 +1,9 @@
 use ast::{
-    Constant, ConstantId, Expr, ExprId, FnDef, FnDefId, Ident, IdentId, NodeKind, Program,
-    ProgramId, Stmt, StmtId, Tree,
+    Constant, ConstantId, Expr, ExprId, FnDef, FnDefId, Ident, IdentId, Program, ProgramId, Stmt,
+    StmtId, Tree,
 };
 use lex::{Token, TokenType, TokenizedOutput, token::Keyword};
-use tracing::{Level, instrument, span, trace};
+use tracing::{Level, span};
 
 pub struct Parser<'src> {
     input: &'src TokenizedOutput<'src>,

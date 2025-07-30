@@ -25,7 +25,7 @@ impl Lower for ast::NodeKind {
             ast::NodeKind::FnDef(fn_def) => NodeKind::FnDef(fn_def.lower(tree)),
             ast::NodeKind::Stmt(stmt) => NodeKind::Instructions(stmt.lower(tree)),
             ast::NodeKind::Expr(expr) => NodeKind::Operand(Operand::Immediate(expr.lower(tree))),
-            ast::NodeKind::Ident(ident) => todo!(),
+            ast::NodeKind::Ident(_ident) => todo!(),
             ast::NodeKind::Constant(constant) => {
                 NodeKind::Operand(Operand::Immediate(constant.lower(tree)))
             }

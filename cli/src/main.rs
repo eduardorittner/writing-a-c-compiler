@@ -121,7 +121,7 @@ fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
 fn usage_help() {
     println!("Usage:");
     println!("ccompiler [file] [options]");
-    println!("");
+    println!();
     println!("Options:");
     println!("  --lex: Only runs the lexer");
     println!("  --parse: Only runs the parser");

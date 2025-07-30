@@ -106,10 +106,6 @@ impl DisplayNode for Expr {
 
 impl DisplayNode for Ident {
     fn fmt_node(&self, _indent: usize, tree: &Tree, f: &mut Formatter<'_>) {
-        self.write(
-            0,
-            &format!("{}", tree.tokens.token_text(self.token.handle)),
-            f,
-        );
+        self.write(0, tree.tokens.token_text(self.token.handle), f);
     }
 }

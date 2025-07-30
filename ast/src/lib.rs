@@ -201,10 +201,7 @@ impl<'src> Tree<'src> {
         let program_index = self
             .nodes
             .iter()
-            .position(|n| match n.kind {
-                NodeKind::Program(_) => true,
-                _ => false,
-            })
+            .position(|n| matches!(n.kind, NodeKind::Program(_)))
             .unwrap();
 
         &self[NodeId(program_index)]

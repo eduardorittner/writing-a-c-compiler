@@ -2,7 +2,7 @@ pub mod line;
 pub mod token;
 
 pub use token::{Token, TokenType};
-use tracing::{Level, info, instrument, span, trace};
+use tracing::{Level, span};
 
 use crate::{line::Line, token::TokenSource};
 
@@ -70,7 +70,7 @@ impl Lexer<'_> {
 
         loop {
             match chars.next() {
-                Some(c) if matches!(c, 'A'..='Z' | 'a'..='z' | '1'..='9' | '_') => (),
+                Some('A'..='Z' | 'a'..='z' | '1'..='9' | '_') => (),
                 Some(c) if c.is_whitespace() => break,
                 _ => break,
             };
@@ -96,12 +96,9 @@ impl Lexer<'_> {
         let c = chars.next().expect("This function should only be called when we still have at least one (alpha_numerical) char in the input");
         let start = self.offset;
 
-        loop {
-            match chars.next() {
-                Some(c) if matches!(c, '0'..='9' | '_') => (), // We allow '_' inside numbers
-                _ => break,
-            };
-            self.offset += c.len_utf8();
+        // We allow '_' inside numbers
+        while let Some('0'..='9' | '_') = chars.next() {
+            self.offset += '0'.len_utf8();
         }
 
         self.offset += c.len_utf8();
@@ -159,7 +156,7 @@ impl Lexer<'_> {
                 '\'' => emit_single_char_token(TokenType::Quote),
                 '"' => emit_single_char_token(TokenType::DoubleQuote),
                 ',' => emit_single_char_token(TokenType::Comma),
-                c if matches!(c, 'a'..='z' | 'A'..='Z' | '_') => self.consume_ident(),
+                'a'..='z' | 'A'..='Z' | '_' => self.consume_ident(),
                 c if c.is_ascii_alphanumeric() => self.consume_numeric_constant(),
                 '\0' => break,
                 _ => panic!("{c:?}"),
@@ -201,8 +198,12 @@ mod output {
             self.tokens.len()
         }
 
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
+
         pub fn get(&self, index: usize) -> Option<Token> {
-            self.tokens.get(index).map(|t| t.clone())
+            self.tokens.get(index).copied()
         }
 
         pub fn token_source(&self, handle: usize) -> TokenSource {
@@ -255,9 +256,9 @@ mod output {
     impl<'src> Display for TokenizedOutput<'src> {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             for (token, source) in self.tokens.iter().zip(self.token_sources.iter()) {
-                write!(
+                writeln!(
                     f,
-                    "{}: [{}] \"{}\"\n",
+                    "{}: [{}] \"{}\"",
                     source.line,
                     token.ttype,
                     source.fmt(self.source)
