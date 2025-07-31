@@ -1,7 +1,12 @@
 use codegen::Codegen;
 use lex::Lexer;
 use parse::Parser;
-use std::{error::Error, path::PathBuf};
+use std::{
+    error::Error,
+    io::{Write, stderr, stdout},
+    path::PathBuf,
+    process::Command,
+};
 use tacky::lower;
 use tracing::info;
 use tracing_subscriber::{
@@ -51,13 +56,11 @@ enum CompilationMode {
     Lex,
     /// Stop after parsing
     Parse,
-    /// Stops after generating tacky, doesn't generate assembly
-    Tacky,
     /// Stop after codegen, doesn't emit assembly file
     Codegen,
-    /// Stop after codegen but emits the assembly file
+    /// Emits the generated assembly
     NakedAssembly,
-    /// Emits the final executable
+    /// Emits the final linked executable
     #[default]
     Full,
 }
@@ -98,7 +101,6 @@ fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
         match arg.as_str() {
             "--lex" => constructed_args.mode = CompilationMode::Lex,
             "--parse" => constructed_args.mode = CompilationMode::Parse,
-            "--tacky" => constructed_args.mode = CompilationMode::Tacky,
             "--codegen" => constructed_args.mode = CompilationMode::Codegen,
             "-S" => constructed_args.mode = CompilationMode::NakedAssembly,
             "--full" => constructed_args.mode = CompilationMode::Full,
@@ -147,7 +149,7 @@ fn parse(file: File) {
     println!("{}", parser.nodes());
 }
 
-fn tacky(file: File) {
+fn codegen(file: File) {
     let output = Lexer::lex(&file.contents);
     let mut parser = Parser::from_tokens(&output);
     parser.parse();
@@ -155,14 +157,52 @@ fn tacky(file: File) {
     println!("{}", tacky);
 }
 
-fn codegen(file: File) {
+fn naked_assembly(file: File) {
     let output = Lexer::lex(&file.contents);
     let mut parser = Parser::from_tokens(&output);
     parser.parse();
     let tacky = lower(parser.nodes());
     let mut codegen = Codegen::new(&tacky);
     codegen.emit();
-    println!("{}", codegen.output());
+    let mut output_file = file.args.file.clone();
+    output_file.set_extension("s");
+    std::fs::write(output_file, codegen.output());
+}
+
+fn full(file: File) {
+    let output = Lexer::lex(&file.contents);
+    let mut parser = Parser::from_tokens(&output);
+    parser.parse();
+    let tacky = lower(parser.nodes());
+    let mut codegen = Codegen::new(&tacky);
+    codegen.emit();
+    let mut assembly_file = file.args.file.clone();
+    assembly_file.set_extension("s");
+    std::fs::write(&assembly_file, codegen.output());
+    let mut executable_file = assembly_file.clone();
+    executable_file.set_extension("");
+
+    let mut linker = Command::new("cc");
+    linker
+        .arg(assembly_file.file_name().unwrap())
+        .arg("-o")
+        .arg(executable_file.file_name().unwrap());
+
+    info!(
+        "Running command: {:?} {:?}",
+        linker.get_program(),
+        linker.get_args()
+    );
+
+    match linker.output() {
+        Ok(ok) => {
+            stdout().write_all(&ok.stdout);
+            stderr().write_all(&ok.stderr);
+        }
+        Err(e) => {
+            panic!("Linker panicked: {e:?}");
+        }
+    };
 }
 
 fn main() {
@@ -181,10 +221,9 @@ fn main() {
             Ok(file) => match file.args.mode {
                 CompilationMode::Lex => lex(file),
                 CompilationMode::Parse => parse(file),
-                CompilationMode::Tacky => tacky(file),
                 CompilationMode::Codegen => codegen(file),
-                CompilationMode::NakedAssembly => todo!(),
-                CompilationMode::Full => todo!(),
+                CompilationMode::NakedAssembly => naked_assembly(file),
+                CompilationMode::Full => full(file),
             },
             Err(e) => {
                 eprintln!("Error reading file {e:?}");
