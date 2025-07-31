@@ -61,6 +61,14 @@ impl<'src> Parser<'src> {
         let _ = span!(Level::TRACE, "Parsing").entered();
 
         let main = self.parse_function_def();
+
+        match self.input.get(self.cur_token) {
+            Some(token) => panic!(
+                "Cannot have top-level constructs ouside function: {}",
+                self.input.token_text(token.handle)
+            ),
+            None => (),
+        }
         let program_node = Program { main };
         self.nodes.push::<Program, ProgramId>(program_node);
     }
