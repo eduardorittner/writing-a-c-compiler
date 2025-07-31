@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 pub enum CompilationMode {
     Lex,
     Parse,
+    Tacky,
     Codegen,
     NakedAssembly,
     // TODO do we need this? Since we don't want to actually emit any files
@@ -15,7 +16,6 @@ pub enum CompilationMode {
 
 pub struct Test {
     pub source_file: PathBuf,
-    pub mode: CompilationMode,
 }
 
 impl Test {
@@ -23,7 +23,7 @@ impl Test {
         self.source_file.file_stem().unwrap().to_str().unwrap()
     }
 
-    fn generate_test_case(&self) -> String {
+    fn generate_test_case(&self, stage: CompilationMode) -> String {
         let mut code = String::new();
 
         code.push_str("#[test]\n");
@@ -33,13 +33,20 @@ impl Test {
             self.source_file
         ));
 
-        match self.mode {
+        match stage {
             CompilationMode::Lex => {
                 code.push_str("let tokens = Lexer::lex(&source);\n");
                 code.push_str("insta::assert_debug_snapshot!(tokens);\n");
             }
-            CompilationMode::Parse => todo!(),
-            CompilationMode::Codegen | CompilationMode::NakedAssembly => todo!(),
+            CompilationMode::Parse => {
+                code.push_str("let tokens = Lexer::lex(&source);\n");
+                code.push_str("let parser = Parser::from_tokens(tokens);\n");
+                code.push_str("parser.parse();\n");
+                code.push_str("insta::assert_debug_snapshot!(tokens);\n");
+            }
+            CompilationMode::Tacky | CompilationMode::Codegen | CompilationMode::NakedAssembly => {
+                todo!()
+            }
             CompilationMode::Full => todo!(),
         };
 
@@ -58,32 +65,21 @@ pub struct TestSuite {
 }
 
 impl TestSuite {
-    pub fn generate_tests(&self, output_dir: &Path, stages: &Vec<String>) {
+    pub fn generate_tests(&self, output_dir: &Path, test_invalid: bool, stage: CompilationMode) {
         println!("generating tests");
-        for stage in stages {
-            match stage.as_str() {
-                "valid" => {
-                    self.generate_valid_tests(output_dir);
-                }
-                "invalid_lex" => {
-                    self.generate_invalid_lex_tests(output_dir);
-                }
-                "invalid_parse" => {
-                    self.generate_invalid_parse_tests(output_dir);
-                }
-                _ => {
-                    panic!("Unknown stage: {stage}");
-                }
-            }
+        self.generate_valid_tests(output_dir, stage);
+        if test_invalid {
+            self.generate_invalid_lex_tests(output_dir, stage);
+            self.generate_invalid_parse_tests(output_dir, stage);
         }
     }
 
-    pub fn generate_valid_tests(&self, output_dir: &Path) {
+    pub fn generate_valid_tests(&self, output_dir: &Path, stage: CompilationMode) {
         let imports = self.generate_imports();
         if let Some(valid) = &self.valid {
             let test_cases = valid
                 .iter()
-                .map(|test| test.generate_test_case())
+                .map(|test| test.generate_test_case(stage))
                 .reduce(|mut acc, s| {
                     acc.push_str(&s);
                     acc
@@ -102,12 +98,12 @@ impl TestSuite {
         }
     }
 
-    pub fn generate_invalid_lex_tests(&self, output_dir: &Path) {
+    pub fn generate_invalid_lex_tests(&self, output_dir: &Path, stage: CompilationMode) {
         let imports = self.generate_imports();
         if let Some(invalid_lex) = &self.invalid_lex {
             let test_cases = invalid_lex
                 .iter()
-                .map(|test| test.generate_test_case())
+                .map(|test| test.generate_test_case(stage))
                 .reduce(|mut acc, s| {
                     acc.push_str(&s);
                     acc
@@ -124,12 +120,12 @@ impl TestSuite {
         }
     }
 
-    pub fn generate_invalid_parse_tests(&self, output_dir: &Path) {
+    pub fn generate_invalid_parse_tests(&self, output_dir: &Path, stage: CompilationMode) {
         let imports = self.generate_imports();
         if let Some(invalid_parse) = &self.invalid_parse {
             let test_cases = invalid_parse
                 .iter()
-                .map(|test| test.generate_test_case())
+                .map(|test| test.generate_test_case(stage))
                 .reduce(|mut acc, s| {
                     acc.push_str(&s);
                     acc
@@ -179,7 +175,6 @@ impl From<&Path> for TestSuite {
                 if path.is_file() {
                     Some(Test {
                         source_file: path.to_owned(),
-                        mode,
                     })
                 } else {
                     eprintln!("Skipping dir {path:?}");

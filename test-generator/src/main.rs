@@ -2,24 +2,24 @@ use std::path::PathBuf;
 
 mod test;
 
-use test::TestSuite;
+use test::{CompilationMode, TestSuite};
 
 struct Options {
     chapter: u8,
-    clean: bool,
     sources: PathBuf,
     output: PathBuf,
-    stages: Vec<String>,
+    stage: CompilationMode,
+    test_invalid: bool,
 }
 
 impl Default for Options {
     fn default() -> Self {
         Options {
             chapter: 1,
-            clean: false,
             sources: PathBuf::from("../examples"),
             output: PathBuf::from("../tests/tests"),
-            stages: vec!["valid".to_string()],
+            stage: CompilationMode::Lex,
+            test_invalid: false,
         }
     }
 }
@@ -36,16 +36,28 @@ fn parse_args() -> Options {
         }
 
         let arg = args.remove(0);
-        if let Ok(chapter) = arg.parse::<u8>() {
-            options.chapter = chapter
-        } else {
-            match arg.as_str() {
-                "clean" => options.clean = true,
-                arg if matches!(arg, "valid" | "invalid_lex" | "invalid_parse") => {
-                    options.stages.push(arg.to_string());
+        match arg.as_str() {
+            "--test-invalid" => options.test_invalid = true,
+            "--chapter" => {
+                let arg = args.remove(0);
+                if let Ok(chapter) = arg.parse() {
+                    options.chapter = chapter;
+                } else {
+                    panic!("Expected a chapter after '--chapter', got: {arg}");
                 }
-                _ => panic!("Unknown option: {arg}"),
             }
+            "--stage" => {
+                let arg = args.remove(0);
+                match arg.as_str() {
+                    "lex" => options.stage = CompilationMode::Lex,
+                    "parse" => options.stage = CompilationMode::Parse,
+                    "tacky" => options.stage = CompilationMode::Tacky,
+                    "codegen" => options.stage = CompilationMode::Codegen,
+                    "run" => todo!(),
+                    _ => panic!("Unknown option: {arg}"),
+                }
+            }
+            _ => panic!("Unknown option: {arg}"),
         }
     }
 
@@ -61,8 +73,8 @@ fn main() {
         .unwrap()
         .map(|p| p.unwrap().path());
 
-    let test_suites = chapters
+    chapters
         .map(|p| TestSuite::from(p))
         .filter(|t| t.chapter <= options.chapter)
-        .for_each(|t| t.generate_tests(&options.output, &options.stages));
+        .for_each(|t| t.generate_tests(&options.output, options.test_invalid, options.stage));
 }
