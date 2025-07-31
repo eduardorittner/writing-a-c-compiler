@@ -6,7 +6,7 @@ pub mod fmt;
 pub mod lower;
 
 pub struct Tacky {
-    nodes: Program,
+    pub nodes: Program,
 }
 
 pub enum NodeKind {
@@ -17,16 +17,17 @@ pub enum NodeKind {
 }
 
 pub struct Program {
-    main: FnDef,
+    pub main: FnDef,
 }
 
 pub struct FnDef {
-    name: String,
-    body: Vec<Instruction>,
+    pub name: String,
+    pub body: Vec<Instruction>,
 }
 
 pub enum Instruction {
     Mov { src: Operand, dst: Operand },
+    Ret,
 }
 
 pub enum Operand {

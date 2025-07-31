@@ -1,8 +1,8 @@
 use std::fmt::{Display, Formatter};
 
-use crate::{AAst, FnDef, Instruction, Operand, Program};
+use crate::{FnDef, Instruction, Operand, Program, Tacky};
 
-impl Display for AAst {
+impl Display for Tacky {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.nodes.fmt_node(0, f);
         Ok(())
@@ -19,7 +19,7 @@ pub trait DisplayNode {
     }
 }
 
-impl DisplayNode for AAst {
+impl DisplayNode for Tacky {
     fn fmt_node(&self, indent: usize, f: &mut Formatter<'_>) {
         self.nodes.fmt_node(indent, f);
     }
@@ -56,6 +56,9 @@ impl DisplayNode for Instruction {
                 self.write(0, ", dest: ", f);
                 dst.fmt_node(0, f);
                 self.write(0, ")", f);
+            }
+            Instruction::Ret => {
+                self.write(0, "Ret", f);
             }
         }
         self.writeln(0, "],", f);

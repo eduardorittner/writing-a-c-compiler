@@ -68,6 +68,7 @@ impl Lower for ast::Stmt {
                     src: Operand::Immediate(tree[expr].lower(tree)),
                     dst: Operand::Register,
                 });
+                instrs.push(Instruction::Ret);
             }
             ast::Stmt::If { .. } => todo!(),
         };
