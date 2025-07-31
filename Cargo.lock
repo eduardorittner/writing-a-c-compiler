@@ -28,6 +28,7 @@ checksum = "9555578bc9e57714c812a1f84e4fc5b4d21fcb063490c624de019f7464c91268"
 name = "cli"
 version = "0.1.0"
 dependencies = [
+ "assembly-ast",
  "lex",
  "parse",
  "tracing",
@@ -187,6 +188,9 @@ dependencies = [
  "insta",
  "lex",
  "parse",
+]
+
+[[package]]
 name = "thread_local"
 version = "1.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
