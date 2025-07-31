@@ -3,7 +3,7 @@ use ast::{
     StmtId, Tree,
 };
 use lex::{Token, TokenType, TokenizedOutput, token::Keyword};
-use tracing::{Level, span};
+use tracing::{Level, error, span};
 
 pub struct Parser<'src> {
     input: &'src TokenizedOutput<'src>,
@@ -30,7 +30,9 @@ impl<'src> Parser<'src> {
     fn expect(&mut self, ttype: TokenType) -> Token {
         let token = self.input.get(self.cur_token).unwrap();
 
-        assert_eq!(token.ttype, ttype);
+        if ttype != token.ttype {
+            panic!("Expected [{}], got [{}]", ttype, token.ttype);
+        }
         self.cur_token += 1;
 
         token

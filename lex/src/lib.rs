@@ -25,16 +25,16 @@ impl Lexer<'_> {
         }
     }
 
-    /// Skips whitespace, updating line info on every newline encountered
+    /// Skips whitespace and comments, updating line info on every newline encountered
     fn skip_whitespace(&mut self) -> Option<char> {
         let mut chars = self.rest.chars();
         let mut c;
 
         loop {
-            c = chars.next()?;
+            c = self.skip_comments()?;
 
             if !c.is_whitespace() {
-                break;
+                break Some(c);
             };
 
             self.offset += c.len_utf8();
@@ -57,8 +57,52 @@ impl Lexer<'_> {
 
             self.rest = &self.rest[c.len_utf8()..];
         }
+    }
 
-        Some(c)
+    /// Skips comments
+    fn skip_comments(&mut self) -> Option<char> {
+        let mut chars = self.rest.chars();
+        let mut c = chars.next()?;
+        let mut in_comment = false;
+        let mut in_multiline_comment = false;
+
+        if c == '/' {
+            match chars.next() {
+                Some('/') => in_comment = true,
+                Some('*') => in_multiline_comment = true,
+                Some(_) | None => (),
+            }
+        } else {
+            return Some(c);
+        }
+
+        self.offset += c.len_utf8() * 2;
+        self.rest = &self.rest[c.len_utf8() * 2..];
+
+        if in_comment {
+            while let Some(c) = chars.next() {
+                self.offset += c.len_utf8();
+                self.rest = &self.rest[c.len_utf8()..];
+                if c == '\n' {
+                    break;
+                }
+            }
+        } else if in_multiline_comment {
+            while let Some(c) = chars.next() {
+                self.offset += c.len_utf8();
+                self.rest = &self.rest[c.len_utf8()..];
+                if c == '*' {
+                    if let Some(c) = chars.next() {
+                        self.offset += c.len_utf8();
+                        self.rest = &self.rest[c.len_utf8()..];
+                        if c == '/' {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        chars.next()
     }
 
     /// Consumes an identifier
