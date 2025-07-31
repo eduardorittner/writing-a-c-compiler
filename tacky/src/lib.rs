@@ -5,7 +5,7 @@ use tracing::{Level, span};
 pub mod fmt;
 pub mod lower;
 
-pub struct AAst {
+pub struct Tacky {
     nodes: Program,
 }
 
@@ -34,10 +34,10 @@ pub enum Operand {
     Register,
 }
 
-pub fn lower(input: &Tree) -> AAst {
+pub fn lower(input: &Tree) -> Tacky {
     let _ = span!(Level::TRACE, "tacky lowering");
 
-    AAst {
+    Tacky {
         nodes: match input.program_node().kind {
             ast::NodeKind::Program(program) => program.lower(input),
             _ => unreachable!(),

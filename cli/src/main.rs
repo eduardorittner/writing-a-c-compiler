@@ -1,7 +1,7 @@
-use assembly_ast::lower;
 use lex::Lexer;
 use parse::Parser;
 use std::{error::Error, path::PathBuf};
+use tacky::lower;
 use tracing::info;
 use tracing_subscriber::{
     fmt::{self, format::FmtSpan},
@@ -147,8 +147,8 @@ fn codegen(file: File) {
     let output = Lexer::lex(&file.contents);
     let mut parser = Parser::from_tokens(&output);
     parser.parse();
-    let assembly_ast = lower(parser.nodes());
-    println!("{}", assembly_ast);
+    let tacky = lower(parser.nodes());
+    println!("{}", tacky);
 }
 
 fn main() {
