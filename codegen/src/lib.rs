@@ -16,6 +16,7 @@ impl<'input> Codegen<'input> {
 
     pub fn emit(&mut self) {
         self.input.nodes.fmt(&mut self.output);
+        self.emit_footer();
     }
 
     pub fn output(&'input self) -> &'input str {
@@ -28,6 +29,13 @@ impl<'input> Codegen<'input> {
 
         #[cfg(target_os = "macos")]
         self.output.push_str("_" + name);
+    }
+
+    fn emit_footer(&mut self) {
+        // Disables executable stack to silence linker warning
+        #[cfg(target_os = "linux")]
+        self.output
+            .push_str(".section .note.GNU-stack,\"\",@progbits\n");
     }
 }
 
