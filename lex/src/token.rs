@@ -34,7 +34,6 @@ pub enum TokenType {
     Semicolon,
     Colon,       // ':'
     FrontSlash,  // '/'
-    BackSlash,   // '\'
     Hyphen,      // '-'
     Asterisk,    // '*'
     Quote,       // "'"
@@ -77,7 +76,6 @@ impl Display for TokenType {
             TokenType::Colon => write!(f, "Colon"),
             TokenType::FrontSlash => write!(f, "FrontsSlash"),
             TokenType::Hyphen => write!(f, "Hyphen"),
-            TokenType::BackSlash => write!(f, "BackSlash"),
             TokenType::Asterisk => write!(f, "Asterisk"),
             TokenType::Quote => write!(f, "Quote"),
             TokenType::DoubleQuote => write!(f, "DoubleQuote"),

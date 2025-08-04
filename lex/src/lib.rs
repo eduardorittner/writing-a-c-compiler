@@ -193,7 +193,6 @@ impl Lexer<'_> {
                 '}' => emit_single_char_token(TokenType::CloseBrace),
                 ';' => emit_single_char_token(TokenType::Semicolon),
                 '/' => emit_single_char_token(TokenType::FrontSlash),
-                '\\' => emit_single_char_token(TokenType::BackSlash),
                 '-' => emit_single_char_token(TokenType::Hyphen),
                 ':' => emit_single_char_token(TokenType::Colon),
                 '*' => emit_single_char_token(TokenType::Asterisk),
