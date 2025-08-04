@@ -58,6 +58,8 @@ enum CompilationMode {
     Lex,
     /// Stop after parsing
     Parse,
+    /// Stop after generating tacky IR
+    Tacky,
     /// Stop after codegen, doesn't emit assembly file
     Codegen,
     /// Emits the generated assembly
@@ -103,6 +105,7 @@ fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
         match arg.as_str() {
             "--lex" => constructed_args.mode = CompilationMode::Lex,
             "--parse" => constructed_args.mode = CompilationMode::Parse,
+            "--tacky" => constructed_args.mode = CompilationMode::Tacky,
             "--codegen" => constructed_args.mode = CompilationMode::Codegen,
             "-S" => constructed_args.mode = CompilationMode::NakedAssembly,
             "--full" => constructed_args.mode = CompilationMode::Full,
@@ -118,10 +121,13 @@ fn parse_args(mut args: Vec<String>) -> Result<Args, CliError> {
     }
 
     if !constructed_args.file.exists() {
+        error!("No such file: {:?}", constructed_args.file);
         eprintln!("{:?}", constructed_args.file);
         // TODO No such file exists
         return Err(CliError::NoSuchFile);
     }
+
+    error!("Parsed args: {constructed_args:?}");
 
     Ok(constructed_args)
 }
@@ -151,12 +157,22 @@ fn parse(file: File) {
     println!("{}", parser.nodes());
 }
 
-fn codegen(file: File) {
+fn tacky(file: File) {
     let output = Lexer::lex(&file.contents);
     let mut parser = Parser::from_tokens(&output);
     parser.parse();
     let tacky = lower(parser.nodes());
     println!("{}", tacky);
+}
+
+fn codegen(file: File) {
+    let output = Lexer::lex(&file.contents);
+    let mut parser = Parser::from_tokens(&output);
+    parser.parse();
+    let tacky = lower(parser.nodes());
+    let mut codegen = Codegen::new(&tacky);
+    codegen.emit();
+    println!("{}", codegen.output());
 }
 
 fn naked_assembly(file: File) {
@@ -246,15 +262,18 @@ fn main() {
             Ok(file) => match file.args.mode {
                 CompilationMode::Lex => lex(file),
                 CompilationMode::Parse => parse(file),
+                CompilationMode::Tacky => codegen(file),
                 CompilationMode::Codegen => codegen(file),
                 CompilationMode::NakedAssembly => naked_assembly(file),
                 CompilationMode::Full => full(file),
             },
             Err(e) => {
+                error!("Error reading file {e:?}");
                 eprintln!("Error reading file {e:?}");
             }
         },
         Err(e) => {
+            error!("Invalid args: {e:?}");
             eprintln!("Invalid args: {e:?}");
             usage_help()
         }
