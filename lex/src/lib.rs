@@ -141,9 +141,22 @@ impl Lexer<'_> {
         let start = self.offset;
 
         // We allow '_' inside numbers
-        while let Some('0'..='9' | '_') = chars.next() {
-            self.offset += '0'.len_utf8();
+        while let Some(c) = chars.next() {
+            match c {
+                '0'..='9' | '_' => {
+                    self.offset += c.len_utf8();
+                }
+                'a'..='z' | 'A'..='Z' => {
+                    panic!("Invalid numeric constant: can't have alphabetic characters");
+                }
+                _ => {
+                    break;
+                }
+            }
         }
+        // while let Some('0'..='9' | '_') = chars.next() {
+        //     self.offset += '0'.len_utf8();
+        // }
 
         self.offset += c.len_utf8();
 
@@ -362,6 +375,20 @@ mod tests {
     #[test]
     fn i64_max() {
         let source = format!("{}", i64::MAX);
+        let mut lexer = Lexer::new(&source);
+
+        lexer.run_lexer();
+
+        let output = lexer.output;
+        assert_eq!(output.len(), 1);
+
+        let token = output.get(0).unwrap();
+        assert_eq!(&source, output.token_source(token.handle).fmt(&source));
+    }
+
+    #[test]
+    fn ident() {
+        let source = "identi";
         let mut lexer = Lexer::new(&source);
 
         lexer.run_lexer();
