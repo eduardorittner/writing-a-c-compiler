@@ -3,13 +3,15 @@ use lex::Lexer;
 use parse::Parser;
 use std::{
     error::Error,
+    fs::OpenOptions,
     io::{Write, stderr, stdout},
     path::PathBuf,
     process::Command,
 };
 use tacky::lower;
-use tracing::info;
+use tracing::{error, info};
 use tracing_subscriber::{
+    EnvFilter,
     fmt::{self, format::FmtSpan},
     layer::SubscriberExt,
     util::SubscriberInitExt,
@@ -183,10 +185,7 @@ fn full(file: File) {
     executable_file.set_extension("");
 
     let mut linker = Command::new("cc");
-    linker
-        .arg(assembly_file.file_name().unwrap())
-        .arg("-o")
-        .arg(executable_file.file_name().unwrap());
+    linker.arg(&assembly_file).arg("-o").arg(&executable_file);
 
     info!(
         "Running command: {:?} {:?}",
@@ -202,18 +201,38 @@ fn full(file: File) {
 
     match linker_output {
         Ok(ok) => {
+            info!("Executable generated");
             stdout().write_all(&ok.stdout);
             stderr().write_all(&ok.stderr);
         }
         Err(e) => {
+            error!("Got linker error: {e:?}");
             panic!("Linker error: {e:?}");
         }
     };
 }
 
 fn main() {
+    // Create a log file, overriding any pre-existing ones
+    let log_file = OpenOptions::new()
+        .append(false)
+        .write(true)
+        .truncate(true)
+        .create(true)
+        .open("ccompiler.log")
+        .unwrap();
+
+    // Log output configuration
     tracing_subscriber::registry()
+        // Log to stdout
         .with(fmt::layer().with_span_events(FmtSpan::CLOSE))
+        // Log to log file
+        .with(
+            fmt::layer()
+                .with_writer(log_file)
+                .with_ansi(false)
+                .with_span_events(FmtSpan::CLOSE),
+        )
         .init();
 
     info!("Starting");
