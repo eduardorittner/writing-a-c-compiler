@@ -40,7 +40,7 @@ impl<'input> Codegen<'input> {
         self.output.push_str(name);
 
         #[cfg(target_os = "macos")]
-        self.output.push_str("_" + name);
+        self.output.push_str(&("_".to_owned() + name));
     }
 
     fn emit_footer(&mut self) {
