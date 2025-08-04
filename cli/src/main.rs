@@ -194,13 +194,19 @@ fn full(file: File) {
         linker.get_args()
     );
 
-    match linker.output() {
+    let linker_output = linker.output();
+
+    info!("Deleting intermediate assembly file: {assembly_file:?}");
+
+    let _ = std::fs::remove_file(&assembly_file);
+
+    match linker_output {
         Ok(ok) => {
             stdout().write_all(&ok.stdout);
             stderr().write_all(&ok.stderr);
         }
         Err(e) => {
-            panic!("Linker panicked: {e:?}");
+            panic!("Linker error: {e:?}");
         }
     };
 }
