@@ -1,4 +1,6 @@
-build:
+.PHONY: build
+
+build: ast cli codegen lex parse tacky
 	cargo build --release
 
 c1: build
