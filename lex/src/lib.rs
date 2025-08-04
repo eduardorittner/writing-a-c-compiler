@@ -1,8 +1,10 @@
+pub mod error;
 pub mod line;
 pub mod token;
 
+pub use error::*;
 pub use token::{Token, TokenType};
-use tracing::{Level, span};
+use tracing::{Level, error, span};
 
 use crate::{line::Line, token::TokenSource};
 
@@ -134,7 +136,7 @@ impl Lexer<'_> {
             .push_token(TokenType::Ident, false, token_source);
     }
 
-    fn consume_numeric_constant(&mut self) {
+    fn consume_numeric_constant(&mut self) -> LexResult<()> {
         let mut chars = self.rest.chars();
 
         let c = chars.next().expect("This function should only be called when we still have at least one (alpha_numerical) char in the input");
@@ -146,17 +148,18 @@ impl Lexer<'_> {
                 '0'..='9' | '_' => {
                     self.offset += c.len_utf8();
                 }
-                'a'..='z' | 'A'..='Z' => {
-                    panic!("Invalid numeric constant: can't have alphabetic characters");
+                c if matches!(c, 'a'..='z' | 'A'..='Z') => {
+                    error!(
+                        "Invalid numeric constant: found '{}' while lexing a number",
+                        c
+                    );
+                    return Err(LexError::InvalidNumericConstant { c });
                 }
                 _ => {
                     break;
                 }
             }
         }
-        // while let Some('0'..='9' | '_') = chars.next() {
-        //     self.offset += '0'.len_utf8();
-        // }
 
         self.offset += c.len_utf8();
 
@@ -170,18 +173,21 @@ impl Lexer<'_> {
 
         self.output
             .push_token(TokenType::Constant, false, token_source);
+
+        Ok(())
     }
 
-    pub fn lex(source: &str) -> TokenizedOutput<'_> {
+    pub fn lex(source: &str) -> LexResult<TokenizedOutput<'_>> {
         let _ = span!(Level::TRACE, "Lexing").entered();
 
         let mut lexer = Self::new(source);
 
-        lexer.run_lexer();
-        lexer.output
+        lexer.run_lexer()?;
+
+        Ok(lexer.output)
     }
 
-    fn run_lexer(&mut self) {
+    fn run_lexer(&mut self) -> LexResult<()> {
         while let Some(c) = self.skip_whitespace() {
             let c_offset = self.offset;
             let c_str = &self.rest[..c.len_utf8()];
@@ -213,16 +219,19 @@ impl Lexer<'_> {
                 '"' => emit_single_char_token(TokenType::DoubleQuote),
                 ',' => emit_single_char_token(TokenType::Comma),
                 'a'..='z' | 'A'..='Z' | '_' => self.consume_ident(),
-                c if c.is_ascii_alphanumeric() => self.consume_numeric_constant(),
+                c if c.is_ascii_alphanumeric() => self.consume_numeric_constant()?,
                 '\0' => break,
-                _ => panic!("{c:?}"),
+                c => return Err(LexError::InvalidChar { c }),
             };
         }
+
         // Emit last line since it doesn't (necessarily) have a '\n'
         self.output.push_line(Line {
             start: self.output.current_line_offset(),
             end: self.offset,
         });
+
+        Ok(())
     }
 }
 
@@ -327,11 +336,11 @@ mod output {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Lexer, TokenType};
+    use crate::{LexError, Lexer, TokenType};
 
     macro_rules! snapshot_test (
         ($string:expr) => {
-            insta::assert_debug_snapshot!(Lexer::lex($string));
+            insta::assert_debug_snapshot!(Lexer::lex($string).unwrap());
         };
     );
 
@@ -397,6 +406,17 @@ mod tests {
         assert_eq!(output.len(), 1);
 
         let token = output.get(0).unwrap();
-        assert_eq!(&source, output.token_source(token.handle).fmt(&source));
+        assert_eq!(&source, &output.token_source(token.handle).fmt(&source));
+    }
+
+    #[test]
+    fn invalid_ident() {
+        let source = "1identi";
+        let mut lexer = Lexer::new(&source);
+
+        match lexer.run_lexer() {
+            Err(LexError::InvalidNumericConstant { c: 'i' }) => (),
+            _ => panic!("Expected lexer to fail with InvalidNumericConstant 'i'"),
+        }
     }
 }

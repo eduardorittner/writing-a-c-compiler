@@ -140,7 +140,7 @@ mod tests {
     fn parse_zero() {
         let source = "0";
 
-        let tokens = Lexer::lex(source);
+        let tokens = Lexer::lex(source).unwrap();
         let mut parser = Parser::from_tokens(&tokens);
 
         let constant_id = parser.parse_constant();
@@ -155,7 +155,7 @@ mod tests {
     fn parse_one() {
         let source = "1";
 
-        let tokens = Lexer::lex(source);
+        let tokens = Lexer::lex(source).unwrap();
         let mut parser = Parser::from_tokens(&tokens);
 
         let constant_id = parser.parse_constant();
@@ -170,7 +170,7 @@ mod tests {
     fn parse_i64_max() {
         let source = format!("{}", i64::MAX);
 
-        let tokens = Lexer::lex(&source);
+        let tokens = Lexer::lex(&source).unwrap();
         let mut parser = Parser::from_tokens(&tokens);
 
         let constant_id = parser.parse_constant();

@@ -147,18 +147,25 @@ fn usage_help() {
 fn lex(file: File) {
     let output = Lexer::lex(&file.contents);
 
-    println!("{output}");
+    match output {
+        Ok(output) => {
+            println!("{output}");
+        }
+        Err(e) => {
+            panic!("{e:?}")
+        }
+    }
 }
 
 fn parse(file: File) {
-    let output = Lexer::lex(&file.contents);
+    let output = Lexer::lex(&file.contents).unwrap();
     let mut parser = Parser::from_tokens(&output);
     parser.parse();
     println!("{}", parser.nodes());
 }
 
 fn tacky(file: File) {
-    let output = Lexer::lex(&file.contents);
+    let output = Lexer::lex(&file.contents).unwrap();
     let mut parser = Parser::from_tokens(&output);
     parser.parse();
     let tacky = lower(parser.nodes());
@@ -166,17 +173,17 @@ fn tacky(file: File) {
 }
 
 fn codegen(file: File) {
-    let output = Lexer::lex(&file.contents);
+    let output = Lexer::lex(&file.contents).unwrap();
     let mut parser = Parser::from_tokens(&output);
     parser.parse();
     let tacky = lower(parser.nodes());
     let mut codegen = Codegen::new(&tacky);
     codegen.emit();
-    println!("{}", codegen.output());
+    println!("{}", &codegen.output());
 }
 
 fn naked_assembly(file: File) {
-    let output = Lexer::lex(&file.contents);
+    let output = Lexer::lex(&file.contents).unwrap();
     let mut parser = Parser::from_tokens(&output);
     parser.parse();
     let tacky = lower(parser.nodes());
@@ -188,7 +195,7 @@ fn naked_assembly(file: File) {
 }
 
 fn full(file: File) {
-    let output = Lexer::lex(&file.contents);
+    let output = Lexer::lex(&file.contents).unwrap();
     let mut parser = Parser::from_tokens(&output);
     parser.parse();
     let tacky = lower(parser.nodes());
