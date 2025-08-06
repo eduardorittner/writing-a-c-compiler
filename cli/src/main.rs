@@ -9,7 +9,6 @@ use std::{
     path::{Path, PathBuf},
     process::Command,
 };
-use tacky::{Tacky, lower};
 use tracing::{error, info};
 use tracing_subscriber::{
     EnvFilter,
@@ -17,6 +16,7 @@ use tracing_subscriber::{
     layer::SubscriberExt,
     util::SubscriberInitExt,
 };
+use x86::{X86, lower};
 
 /// Cli arguments
 ///
@@ -125,6 +125,7 @@ fn usage_help() {
     println!("Options:");
     println!("  --lex: Only runs the lexer");
     println!("  --parse: Only runs the parser");
+    println!("  --tacky: Runs up to tacky lowering");
     println!("  --codegen: Runs up to codegen but doesn't emit any file");
     println!("  -S: Emits naked assembly file");
     println!("  --full: Runs the whole pipeline and outputs final executable");
@@ -141,7 +142,7 @@ fn parse<'src>(src: &'src str) -> Result<Tree<'src>, Box<dyn Error>> {
     Ok(parser.nodes.clone())
 }
 
-fn tacky<'src>(src: &'src str) -> Result<Tacky, Box<dyn Error>> {
+fn tacky<'src>(src: &'src str) -> Result<X86, Box<dyn Error>> {
     let ast = parse(src)?;
     Ok(lower(&ast))
 }

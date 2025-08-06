@@ -32,16 +32,16 @@ dependencies = [
  "codegen",
  "lex",
  "parse",
- "tacky",
  "tracing",
  "tracing-subscriber",
+ "x86",
 ]
 
 [[package]]
 name = "codegen"
 version = "0.1.0"
 dependencies = [
- "tacky",
+ "x86",
 ]
 
 [[package]]
@@ -246,15 +246,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tacky"
-version = "0.1.0"
-dependencies = [
- "ast",
- "lex",
- "tracing",
-]
-
-[[package]]
 name = "thread_local"
 version = "1.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -430,3 +421,12 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+
+[[package]]
+name = "x86"
+version = "0.1.0"
+dependencies = [
+ "ast",
+ "lex",
+ "tracing",
+]

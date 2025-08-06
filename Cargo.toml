@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = [ "lex", "ast", "cli" , "parse", "tacky", "codegen"]
+members = [ "lex", "ast", "cli" , "parse", "x86", "codegen"]
 default-members = [ "cli" ]
 
 # Used since insta recommends building it in release mode for faster tests

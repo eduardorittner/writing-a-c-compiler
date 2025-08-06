@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 lex = { path = "../lex" }
 parse = { path = "../parse" }
-tacky = { path = "../tacky/" }
+x86 = { path = "../x86" }
 codegen = { path = "../codegen" }
 ast = { path = "../ast" }
 tracing-subscriber = { version = "0.3.19", features = [ "env-filter" ] }

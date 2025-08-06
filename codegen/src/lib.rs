@@ -1,13 +1,14 @@
 use std::fmt::Write;
 
-use tacky::{FnDef, Instruction, Operand, Program, Tacky};
+use x86::{FnDef, Instruction, Operand, Program, X86};
+
 pub struct Codegen<'input> {
-    input: &'input Tacky,
+    input: &'input X86,
     output: String,
 }
 
 impl<'input> Codegen<'input> {
-    pub fn new(input: &'input Tacky) -> Self {
+    pub fn new(input: &'input X86) -> Self {
         Self {
             input,
             output: String::new(),
@@ -39,7 +40,7 @@ impl<'input> Codegen<'input> {
     }
 }
 
-/// Very similar to the `Display` trait, but we can't impl it for `Tacky` since both are defined in
+/// Very similar to the `Display` trait, but we can't impl it for `X86` since both are defined in
 /// other crates.
 trait Format {
     fn fmt(&self, string: &mut String);
