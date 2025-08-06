@@ -6,18 +6,16 @@ use lex::{Token, TokenType, TokenizedOutput, token::Keyword};
 use tracing::{Level, error, span};
 
 pub struct Parser<'src> {
-    input: &'src TokenizedOutput<'src>,
-    nodes: Tree<'src>,
+    pub nodes: Tree<'src>,
     cur_token: usize,
 }
 
 impl<'src> Parser<'src> {
-    pub fn from_tokens(tokens: &'src TokenizedOutput<'src>) -> Parser<'src> {
+    pub fn from_tokens(tokens: TokenizedOutput<'src>) -> Parser<'src> {
         // Size optimization where we "guess" we'll have around the same number of ast nodes and tokens
         // This is not exactly correct, but it's good enough
         let len = tokens.len();
         Parser {
-            input: tokens,
             nodes: Tree::with_capacity(tokens, len),
             cur_token: 0,
         }
@@ -27,8 +25,12 @@ impl<'src> Parser<'src> {
         &self.nodes
     }
 
+    pub fn tokens(&'src self) -> &'src TokenizedOutput<'src> {
+        &self.nodes.tokens
+    }
+
     fn expect(&mut self, ttype: TokenType) -> Token {
-        let token = self.input.get(self.cur_token).unwrap();
+        let token = self.tokens().get(self.cur_token).unwrap();
 
         if ttype != token.ttype {
             panic!("Expected [{}], got [{}]", ttype, token.ttype);
@@ -49,7 +51,7 @@ impl<'src> Parser<'src> {
     fn expect_keyword(&mut self, keyword: Keyword) -> Token {
         let token = self.expect(TokenType::Ident);
 
-        let source = self.input.token_text(token.handle);
+        let source = self.tokens().token_text(token.handle);
 
         // TODO propagate error
         assert_eq!(source, format!("{}", keyword));
@@ -62,10 +64,10 @@ impl<'src> Parser<'src> {
 
         let main = self.parse_function_def();
 
-        match self.input.get(self.cur_token) {
+        match self.tokens().get(self.cur_token) {
             Some(token) => panic!(
                 "Cannot have top-level constructs ouside function: {}",
-                self.input.token_text(token.handle)
+                self.tokens().token_text(token.handle)
             ),
             None => (),
         }
@@ -121,7 +123,7 @@ impl<'src> Parser<'src> {
     /// <constant> = <int>
     fn parse_constant(&mut self) -> ConstantId {
         let token = self.expect(TokenType::Constant);
-        let token_source = self.input.token_text(token.handle);
+        let token_source = self.tokens().token_text(token.handle);
         let value: i64 = token_source.parse().unwrap();
 
         let constant = Constant { value, token };

@@ -61,7 +61,7 @@ macro_rules! node_type(
 /// An AST Node
 ///
 /// A node has an optional reference to a token, since every ast node has at most one direct token, and may have zero.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Node {
     pub kind: NodeKind,
 }
@@ -167,21 +167,21 @@ node_type!(Constant, ConstantId);
 /// will result in a tree like
 ///
 /// [type "int", expr "0", return, function "main"]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Tree<'src> {
-    pub tokens: &'src TokenizedOutput<'src>,
+    pub tokens: TokenizedOutput<'src>,
     pub nodes: Vec<Node>,
 }
 
 impl<'src> Tree<'src> {
-    pub fn new(tokens: &'src TokenizedOutput<'src>) -> Tree<'src> {
+    pub fn new(tokens: TokenizedOutput<'src>) -> Tree<'src> {
         Tree {
             tokens,
             nodes: Vec::new(),
         }
     }
 
-    pub fn with_capacity(tokens: &'src TokenizedOutput<'src>, cap: usize) -> Tree<'src> {
+    pub fn with_capacity(tokens: TokenizedOutput<'src>, cap: usize) -> Tree<'src> {
         Tree {
             tokens,
             nodes: Vec::with_capacity(cap),

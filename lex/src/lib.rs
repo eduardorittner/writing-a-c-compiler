@@ -240,7 +240,7 @@ mod output {
 
     use crate::{Token, TokenType, line::Line, token::TokenSource};
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct TokenizedOutput<'src> {
         source: &'src str,
         tokens: Vec<Token>,

@@ -1,14 +1,15 @@
+use ast::Tree;
 use codegen::Codegen;
-use lex::Lexer;
+use lex::{LexError, Lexer, TokenizedOutput};
 use parse::Parser;
 use std::{
     error::Error,
     fs::OpenOptions,
     io::{Write, stderr, stdout},
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
 };
-use tacky::lower;
+use tacky::{Tacky, lower};
 use tracing::{error, info};
 use tracing_subscriber::{
     EnvFilter,
@@ -32,21 +33,6 @@ impl Default for Args {
             file: PathBuf::default(),
             mode: CompilationMode::Full,
         }
-    }
-}
-
-/// A validated wrapper over args where the file is known to be valid and has already been read
-struct File {
-    args: Args,
-    contents: String,
-}
-
-impl TryFrom<Args> for File {
-    type Error = std::io::Error;
-
-    fn try_from(args: Args) -> Result<Self, Self::Error> {
-        let contents = std::fs::read_to_string(&args.file)?;
-        Ok(File { args, contents })
     }
 }
 
@@ -144,67 +130,41 @@ fn usage_help() {
     println!("  --full: Runs the whole pipeline and outputs final executable");
 }
 
-fn lex(file: File) {
-    let output = Lexer::lex(&file.contents);
-
-    match output {
-        Ok(output) => {
-            println!("{output}");
-        }
-        Err(e) => {
-            panic!("{e:?}")
-        }
-    }
+pub fn lex<'src>(src: &'src str) -> Result<TokenizedOutput<'src>, Box<dyn Error>> {
+    Ok(Lexer::lex(src)?)
 }
 
-fn parse(file: File) {
-    let output = Lexer::lex(&file.contents).unwrap();
-    let mut parser = Parser::from_tokens(&output);
+fn parse<'src>(src: &'src str) -> Result<Tree<'src>, Box<dyn Error>> {
+    let tokens = lex(src)?;
+    let mut parser = Parser::from_tokens(tokens);
     parser.parse();
-    println!("{}", parser.nodes());
+    Ok(parser.nodes.clone())
 }
 
-fn tacky(file: File) {
-    let output = Lexer::lex(&file.contents).unwrap();
-    let mut parser = Parser::from_tokens(&output);
-    parser.parse();
-    let tacky = lower(parser.nodes());
-    println!("{}", tacky);
+fn tacky<'src>(src: &'src str) -> Result<Tacky, Box<dyn Error>> {
+    let ast = parse(src)?;
+    Ok(lower(&ast))
 }
 
-fn codegen(file: File) {
-    let output = Lexer::lex(&file.contents).unwrap();
-    let mut parser = Parser::from_tokens(&output);
-    parser.parse();
-    let tacky = lower(parser.nodes());
+fn codegen(src: &str) -> Result<String, Box<dyn Error>> {
+    let tacky = tacky(src)?;
     let mut codegen = Codegen::new(&tacky);
     codegen.emit();
-    println!("{}", &codegen.output());
+    Ok(codegen.output().to_string())
 }
 
-fn naked_assembly(file: File) {
-    let output = Lexer::lex(&file.contents).unwrap();
-    let mut parser = Parser::from_tokens(&output);
-    parser.parse();
-    let tacky = lower(parser.nodes());
-    let mut codegen = Codegen::new(&tacky);
-    codegen.emit();
-    let mut output_file = file.args.file.clone();
-    output_file.set_extension("s");
-    std::fs::write(output_file, codegen.output());
+fn naked_assembly(src: &str, output_file: &Path) -> Result<(), Box<dyn Error>> {
+    let assembly = codegen(src)?;
+    std::fs::write(output_file, assembly)?;
+    Ok(())
 }
 
-fn full(file: File) {
-    let output = Lexer::lex(&file.contents).unwrap();
-    let mut parser = Parser::from_tokens(&output);
-    parser.parse();
-    let tacky = lower(parser.nodes());
-    let mut codegen = Codegen::new(&tacky);
-    codegen.emit();
-    let mut assembly_file = file.args.file.clone();
+fn full(src: &str, input_file: &Path) -> Result<PathBuf, Box<dyn Error>> {
+    let mut assembly_file = PathBuf::from(input_file);
     assembly_file.set_extension("s");
-    std::fs::write(&assembly_file, codegen.output());
-    let mut executable_file = assembly_file.clone();
+
+    naked_assembly(src, &assembly_file)?;
+    let mut executable_file = PathBuf::from(input_file);
     executable_file.set_extension("");
 
     let mut linker = Command::new("cc");
@@ -233,6 +193,7 @@ fn full(file: File) {
             panic!("Linker error: {e:?}");
         }
     };
+    Ok(executable_file)
 }
 
 fn main() {
@@ -265,20 +226,40 @@ fn main() {
             .map(|s| s.into_string().unwrap())
             .collect(),
     ) {
-        Ok(args) => match File::try_from(args) {
-            Ok(file) => match file.args.mode {
-                CompilationMode::Lex => lex(file),
-                CompilationMode::Parse => parse(file),
-                CompilationMode::Tacky => codegen(file),
-                CompilationMode::Codegen => codegen(file),
-                CompilationMode::NakedAssembly => naked_assembly(file),
-                CompilationMode::Full => full(file),
-            },
-            Err(e) => {
-                error!("Error reading file {e:?}");
-                eprintln!("Error reading file {e:?}");
+        Ok(args) => {
+            let input = std::fs::read_to_string(&args.file).unwrap();
+
+            match args.mode {
+                CompilationMode::Lex => match lex(&input) {
+                    Ok(tokens) => println!("{}", tokens),
+                    Err(e) => panic!("{}", e),
+                },
+                CompilationMode::Parse => match parse(&input) {
+                    Ok(ast) => println!("{}", ast),
+                    Err(e) => panic!("{}", e),
+                },
+                CompilationMode::Tacky => match tacky(&input) {
+                    Ok(tacky) => println!("{}", tacky),
+                    Err(e) => panic!("{}", e),
+                },
+                CompilationMode::Codegen => match codegen(&input) {
+                    Ok(assembly) => println!("{}", assembly),
+                    Err(e) => panic!("{}", e),
+                },
+                CompilationMode::NakedAssembly => {
+                    let mut assembly_file = PathBuf::from(&args.file);
+                    assembly_file.set_extension("s");
+                    match naked_assembly(&input, &assembly_file) {
+                        Ok(()) => println!("Generated {assembly_file:?}"),
+                        Err(e) => panic!("{}", e),
+                    }
+                }
+                CompilationMode::Full => match full(&input, &args.file) {
+                    Ok(executable) => println!("Generated {executable:?}"),
+                    Err(e) => panic!("{}", e),
+                },
             }
-        },
+        }
         Err(e) => {
             error!("Invalid args: {e:?}");
             eprintln!("Invalid args: {e:?}");
