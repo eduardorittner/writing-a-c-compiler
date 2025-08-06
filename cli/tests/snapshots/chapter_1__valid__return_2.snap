@@ -1,20 +1,5 @@
 ---
 source: cli/tests/chapter-1.rs
-expression: codegen(RETURN_2).unwrap()
+expression: assembly_string(RETURN_2).unwrap()
 ---
-X86 {
-    nodes: Program {
-        main: FnDef {
-            name: "main",
-            body: [
-                Mov {
-                    src: Immediate(
-                        2,
-                    ),
-                    dst: Register,
-                },
-                Ret,
-            ],
-        },
-    },
-}
+".globl main\nmain:\n    movl $2, %eax\n    ret\n\n.section .note.GNU-stack,\"\",@progbits\n"

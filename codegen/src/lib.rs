@@ -1,5 +1,8 @@
 use std::fmt::Write;
 
+pub mod error;
+pub use error::*;
+
 use x86::{FnDef, Instruction, Operand, Program, X86};
 
 pub struct Codegen<'input> {
@@ -15,9 +18,17 @@ impl<'input> Codegen<'input> {
         }
     }
 
-    pub fn emit(&mut self) {
+    pub fn emit(&'input mut self) -> &'input str {
         self.input.nodes.fmt(&mut self.output);
         self.emit_footer();
+        &self.output
+    }
+
+    pub fn emit_from_input(input: &'input X86) -> CodegenResult<String> {
+        let mut codegen = Codegen::new(input);
+        codegen.input.nodes.fmt(&mut codegen.output);
+        codegen.emit_footer();
+        Ok(codegen.output.clone())
     }
 
     pub fn output(&'input self) -> &'input str {
@@ -36,7 +47,7 @@ impl<'input> Codegen<'input> {
         // Disables executable stack to silence linker warning
         #[cfg(target_os = "linux")]
         self.output
-            .push_str(".section .note.GNU-stack,\"\",@progbits\n");
+            .push_str("\n.section .note.GNU-stack,\"\",@progbits\n");
     }
 }
 

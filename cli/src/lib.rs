@@ -144,12 +144,14 @@ pub fn codegen(src: &str) -> Result<X86, Box<dyn Error>> {
     tacky(src)
 }
 
-pub fn naked_assembly(src: &str, output_file: &Path) -> Result<(), Box<dyn Error>> {
+pub fn assembly_string(src: &str) -> Result<String, Box<dyn Error>> {
     let x86 = codegen(src)?;
-    let mut codegen = Codegen::new(&x86);
-    codegen.emit();
-    let assembly = codegen.output().to_string();
-    std::fs::write(output_file, assembly)?;
+    Ok(Codegen::emit_from_input(&x86)?)
+}
+
+pub fn naked_assembly(src: &str, output_file: &Path) -> Result<(), Box<dyn Error>> {
+    let assembly = assembly_string(src)?;
+    std::fs::write(output_file, &assembly)?;
     Ok(())
 }
 

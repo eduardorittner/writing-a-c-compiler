@@ -1,20 +1,5 @@
 ---
 source: cli/tests/chapter-1.rs
-expression: codegen(MULTI_DIGITS).unwrap()
+expression: assembly_string(MULTI_DIGITS).unwrap()
 ---
-X86 {
-    nodes: Program {
-        main: FnDef {
-            name: "main",
-            body: [
-                Mov {
-                    src: Immediate(
-                        100,
-                    ),
-                    dst: Register,
-                },
-                Ret,
-            ],
-        },
-    },
-}
+".globl main\nmain:\n    movl $100, %eax\n    ret\n\n.section .note.GNU-stack,\"\",@progbits\n"

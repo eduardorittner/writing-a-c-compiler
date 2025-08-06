@@ -3,7 +3,7 @@ use insta;
 #[macro_export]
 macro_rules! assert_x86 {
     ($input:expr) => {
-        insta::assert_debug_snapshot!(codegen($input).unwrap());
+        insta::assert_debug_snapshot!(assembly_string($input).unwrap());
     };
 }
 

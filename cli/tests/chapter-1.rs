@@ -2,6 +2,7 @@ mod common;
 
 mod valid {
     use crate::assert_x86;
+    use cli::assembly_string;
     use cli::codegen;
 
     /// Since all these tests are essentially the same program, they just return 0, we can validate
