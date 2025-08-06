@@ -11,3 +11,6 @@ codegen = { path = "../codegen" }
 ast = { path = "../ast" }
 tracing-subscriber = { version = "0.3.19", features = [ "env-filter" ] }
 tracing = "0.1.41"
+
+[dev-dependencies]
+insta = "1.43.1"

@@ -1,0 +1,20 @@
+---
+source: cli/tests/chapter-1.rs
+expression: codegen(RETURN_0).unwrap()
+---
+X86 {
+    nodes: Program {
+        main: FnDef {
+            name: "main",
+            body: [
+                Mov {
+                    src: Immediate(
+                        0,
+                    ),
+                    dst: Register,
+                },
+                Ret,
+            ],
+        },
+    },
+}

@@ -30,6 +30,7 @@ version = "0.1.0"
 dependencies = [
  "ast",
  "codegen",
+ "insta",
  "lex",
  "parse",
  "tracing",
