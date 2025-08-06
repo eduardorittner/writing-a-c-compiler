@@ -143,14 +143,14 @@ mod tests {
         let source = "0";
 
         let tokens = Lexer::lex(source).unwrap();
-        let mut parser = Parser::from_tokens(&tokens);
+        let mut parser = Parser::from_tokens(tokens);
 
         let constant_id = parser.parse_constant();
         assert_eq!(usize::from(constant_id), 0);
 
         let constant = parser.nodes[constant_id];
         assert_eq!(constant.value, 0);
-        assert_eq!(constant.token, parser.input.get(0).unwrap());
+        assert_eq!(constant.token, parser.tokens().get(0).unwrap());
     }
 
     #[test]
@@ -158,14 +158,14 @@ mod tests {
         let source = "1";
 
         let tokens = Lexer::lex(source).unwrap();
-        let mut parser = Parser::from_tokens(&tokens);
+        let mut parser = Parser::from_tokens(tokens);
 
         let constant_id = parser.parse_constant();
         assert_eq!(usize::from(constant_id), 0);
 
         let constant = parser.nodes[constant_id];
         assert_eq!(constant.value, 1);
-        assert_eq!(constant.token, parser.input.get(0).unwrap());
+        assert_eq!(constant.token, parser.tokens().get(0).unwrap());
     }
 
     #[test]
@@ -173,14 +173,14 @@ mod tests {
         let source = format!("{}", i64::MAX);
 
         let tokens = Lexer::lex(&source).unwrap();
-        let mut parser = Parser::from_tokens(&tokens);
+        let mut parser = Parser::from_tokens(tokens);
 
         let constant_id = parser.parse_constant();
         assert_eq!(usize::from(constant_id), 0);
 
         let constant = parser.nodes[constant_id];
         assert_eq!(constant.value, i64::MAX);
-        assert_eq!(constant.token, parser.input.get(0).unwrap());
+        assert_eq!(constant.token, parser.tokens().get(0).unwrap());
     }
 
     // FIXME: These tests exercise negative number parsing which we don't handle just yet
