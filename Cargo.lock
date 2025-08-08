@@ -42,6 +42,7 @@ dependencies = [
 name = "codegen"
 version = "0.1.0"
 dependencies = [
+ "tracing",
  "x86",
 ]
 
