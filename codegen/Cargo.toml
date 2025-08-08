@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 x86 = { path = "../x86" }
+tracing = "0.1.41"

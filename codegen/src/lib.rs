@@ -1,4 +1,5 @@
 use std::fmt::Write;
+use tracing::info;
 
 pub mod error;
 pub use error::*;
@@ -35,14 +36,6 @@ impl<'input> Codegen<'input> {
         &self.output
     }
 
-    fn emit_function(&mut self, name: &str) {
-        #[cfg(target_os = "linux")]
-        self.output.push_str(name);
-
-        #[cfg(target_os = "macos")]
-        self.output.push_str(&("_".to_owned() + name));
-    }
-
     fn emit_footer(&mut self) {
         // Disables executable stack to silence linker warning
         #[cfg(target_os = "linux")]
@@ -65,8 +58,14 @@ impl Format for Program {
 
 impl Format for FnDef {
     fn fmt(&self, string: &mut String) {
-        let _ = writeln!(string, ".globl {}", &self.name);
-        let _ = writeln!(string, "{}:", &self.name);
+        info!("Formatting function");
+        let name = if cfg!(target_os = "macos") {
+            &("_".to_string() + &self.name)
+        } else {
+            &self.name
+        };
+        let _ = writeln!(string, ".globl {}", name);
+        let _ = writeln!(string, "{}:", name);
         self.body.iter().for_each(|instr| instr.fmt(string));
     }
 }
